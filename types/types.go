@@ -18,9 +18,9 @@ type GameState struct {
 }
 
 type CreateGameRequest struct {
-	NumberOfBoards int `json:"numberOfBoards"`
-	BoardSize      int `json:"boardSize"`
-	Difficulty     int `json:"difficulty"`
+	NumberOfBoards BoardNumber `json:"numberOfBoards"`
+	BoardSize      BoardSize `json:"boardSize"`
+	Difficulty     DifficultyLevel `json:"difficulty"`
 }
 
 type GameResponse struct {
