@@ -71,7 +71,7 @@ jobs:
 
     - name: Run Goose Migrations on PROD 
       env:
-        PROD_DB: ${{ secrets.DATABASE_URL }}
+        DATABASE_URL: ${{ secrets.DATABASE_URL }}
       run: |
         goose -dir db/migrations postgres "$DATABASE_URL" up
         echo "✅ PROD DB UPDATED!"
