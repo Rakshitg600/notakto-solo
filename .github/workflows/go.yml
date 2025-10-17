@@ -36,3 +36,42 @@ jobs:
 
     - name: Test
       run: go test -v ./...
+
+# Deploy to PROD (ONLY on main push)
+  deploy:
+    needs: test                    # Run only if tests pass
+    if: github.ref == 'refs/heads/main'  # Only on main push
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Go
+      uses: actions/setup-go@v4
+      with:
+        go-version: '1.24'
+
+    - name: Install Goose
+      run: |
+        curl -fsSL github.com/pressly/goose/v3/cmd/goose_Linux_x86_64.tar.gz | tar -xz
+        sudo mv goose /usr/local/bin/
+        goose version
+
+    # - name: Run Goose Migrations on Staging (Test First)
+    #   env:
+    #     STAGING_DB: ${{ secrets.STAGING_DB_URL }}
+    #   run: |
+    #     goose -dir migrations up
+
+    - name: Generate SQLC Code
+      run: |
+        # Install sqlc if needed
+        curl -L https://github.com/sqlc-dev/sqlc/releases/latest/download/sqlc_$(go env GOOS)_$(go env GOARCH).tar.gz | tar xz
+        sudo mv sqlc /usr/local/bin/
+        sqlc generate
+
+    - name: Run Goose Migrations on PROD 
+      env:
+        PROD_DB: ${{ secrets.DATABASE_URL }}
+      run: |
+        goose -dir db/migrations postgres "$DATABASE_URL" up
+        echo "✅ PROD DB UPDATED!"
