@@ -52,9 +52,10 @@ jobs:
 
     - name: Install Goose
       run: |
-        curl -fsSL github.com/pressly/goose/v3/cmd/goose_Linux_x86_64.tar.gz | tar -xz
-        sudo mv goose /usr/local/bin/
-        goose version
+        go install github.com/pressly/goose/v3/cmd/goose@latest
+        echo "$HOME/go/bin" >> $GITHUB_PATH
+        goose --version
+
 
     # - name: Run Goose Migrations on Staging (Test First)
     #   env:
