@@ -65,9 +65,8 @@ jobs:
 
     - name: Generate SQLC Code
       run: |
-        # Install sqlc if needed
-        curl -L https://github.com/sqlc-dev/sqlc/releases/latest/download/sqlc_$(go env GOOS)_$(go env GOARCH).tar.gz | tar xz
-        sudo mv sqlc /usr/local/bin/
+        go install github.com/sqlc-dev/sqlc/cmd/sqlc@latest
+        echo "$HOME/go/bin" >> $GITHUB_PATH
         sqlc generate
 
     - name: Run Goose Migrations on PROD 
