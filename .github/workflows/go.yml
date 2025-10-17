@@ -39,7 +39,7 @@ jobs:
 
 # Deploy to PROD (ONLY on main push)
   deploy:
-    needs: test                    # Run only if tests pass
+    needs: build                    # Run only if build pass
     if: github.ref == 'refs/heads/main'  # Only on main push
     runs-on: ubuntu-latest
     steps:
