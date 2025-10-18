@@ -9,7 +9,7 @@ import (
 )
 
 type Querier interface {
-	getPlayerById(ctx context.Context, uid int32) (Player, error)
+	GetPlayerById(ctx context.Context, uid string) (Player, error)
 }
 
 var _ Querier = (*Queries)(nil)

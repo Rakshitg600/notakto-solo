@@ -25,7 +25,7 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	q := Queries{db: db}
 	var err error
 	if q.getPlayerByIdStmt, err = db.PrepareContext(ctx, getPlayerById); err != nil {
-		return nil, fmt.Errorf("error preparing query getPlayerById: %w", err)
+		return nil, fmt.Errorf("error preparing query GetPlayerById: %w", err)
 	}
 	return &q, nil
 }

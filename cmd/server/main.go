@@ -1,39 +1,39 @@
 package main
 
 import (
-	"context"
 	"database/sql"
-	"fmt"
 	"log"
-	"net/http"
 	"os"
-	"time"
 
-	_ "github.com/jackc/pgx/v5/stdlib"
+	"github.com/joho/godotenv"
 	"github.com/labstack/echo/v4"
+	_ "github.com/lib/pq"
+	db "github.com/rakshitg600/notakto-solo/db/generated"
+	"github.com/rakshitg600/notakto-solo/handlers"
+	"github.com/rakshitg600/notakto-solo/routes"
 )
 
 func main() {
-	e := echo.New()
-	e.GET("/", func(c echo.Context) error {
-		return c.String(http.StatusOK, "Hello, World!")
-	})
+	godotenv.Load()
 	dbURL := os.Getenv("DATABASE_URL")
 	if dbURL == "" {
 		log.Fatal("DATABASE_URL is not set")
 	}
 
-	db, err := sql.Open("pgx", dbURL)
+	conn, err := sql.Open("postgres", dbURL)
 	if err != nil {
-		log.Fatalf("failed to open db: %v", err)
+		log.Fatal(err)
 	}
-	defer db.Close()
+	defer conn.Close()
 
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-	if err := db.PingContext(ctx); err != nil {
-		log.Fatalf("db ping failed: %v", err)
+	if err := conn.Ping(); err != nil {
+		log.Fatal("failed to connect to database:", err)
 	}
-	fmt.Println("✅ DB connected and ping OK")
+
+	queries := db.New(conn)
+	handler := handlers.NewHandler(queries)
+
+	e := echo.New()
+	routes.RegisterRoutes(e, handler)
 	e.Logger.Fatal(e.Start(":1323"))
 }
