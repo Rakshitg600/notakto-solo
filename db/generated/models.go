@@ -9,7 +9,7 @@ import (
 )
 
 type Player struct {
-	Uid        int32          `json:"uid"`
+	Uid        string         `json:"uid"`
 	Name       string         `json:"name"`
 	Email      string         `json:"email"`
 	ProfilePic sql.NullString `json:"profile_pic"`
@@ -17,7 +17,7 @@ type Player struct {
 
 type Session struct {
 	SessionID int32        `json:"session_id"`
-	Uid       int32        `json:"uid"`
+	Uid       string       `json:"uid"`
 	Expired   sql.NullBool `json:"expired"`
 	CreatedAt sql.NullTime `json:"created_at"`
 }
@@ -35,7 +35,7 @@ type Sessionstate struct {
 }
 
 type Wallet struct {
-	Uid   int32         `json:"uid"`
+	Uid   string        `json:"uid"`
 	Coins sql.NullInt32 `json:"coins"`
 	Xp    sql.NullInt32 `json:"xp"`
 }

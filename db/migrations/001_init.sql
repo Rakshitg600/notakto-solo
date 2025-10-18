@@ -2,16 +2,17 @@
 -- +goose StatementBegin
 -- Create Player table
 CREATE TABLE Player (
-    uid SERIAL PRIMARY KEY,
+    uid VARCHAR(36) PRIMARY KEY, -- assuming UUID format
     name VARCHAR(100) NOT NULL,
     email VARCHAR(255) UNIQUE NOT NULL,
     profile_pic TEXT
 );
 
+
 -- Create Session table
 CREATE TABLE Session (
     session_id SERIAL PRIMARY KEY,
-    uid INTEGER NOT NULL,
+    uid VARCHAR(36) NOT NULL,
     expired BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (uid) REFERENCES Player(uid) ON DELETE CASCADE
@@ -33,7 +34,7 @@ CREATE TABLE SessionState (
 
 -- Create Wallet table
 CREATE TABLE Wallet (
-    uid INTEGER PRIMARY KEY,
+    uid VARCHAR(36) PRIMARY KEY,
     coins INTEGER DEFAULT 0,
     xp INTEGER DEFAULT 0,
     FOREIGN KEY (uid) REFERENCES Player(uid) ON DELETE CASCADE
