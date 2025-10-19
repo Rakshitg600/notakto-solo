@@ -1,7 +1,6 @@
 package middleware
 
 import (
-	"log"
 	"net/http"
 
 	"github.com/rakshitg600/notakto-solo/functions"
@@ -17,7 +16,6 @@ func FirebaseAuthMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 		}
 
 		idToken := authHeader[len("Bearer "):]
-		log.Println("Verifying token:", idToken)
 		uid, err := functions.VerifyFirebaseToken(idToken)
 		if err != nil {
 			return echo.NewHTTPError(http.StatusUnauthorized, "Invalid token")

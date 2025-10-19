@@ -16,14 +16,14 @@ type Player struct {
 }
 
 type Session struct {
-	SessionID int32        `json:"session_id"`
+	SessionID string       `json:"session_id"`
 	Uid       string       `json:"uid"`
 	Expired   sql.NullBool `json:"expired"`
 	CreatedAt sql.NullTime `json:"created_at"`
 }
 
 type Sessionstate struct {
-	SessionID      int32          `json:"session_id"`
+	SessionID      string         `json:"session_id"`
 	Boards         [][]string     `json:"boards"`
 	CurrentPlayer  sql.NullInt32  `json:"current_player"`
 	Winner         sql.NullString `json:"winner"`

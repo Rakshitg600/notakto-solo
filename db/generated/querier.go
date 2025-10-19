@@ -9,6 +9,9 @@ import (
 )
 
 type Querier interface {
+	CreateInitialSessionState(ctx context.Context, arg CreateInitialSessionStateParams) error
+	CreateSession(ctx context.Context, arg CreateSessionParams) error
+	GetLatestSessionStateByPlayerId(ctx context.Context, uid string) (GetLatestSessionStateByPlayerIdRow, error)
 	GetPlayerById(ctx context.Context, uid string) (Player, error)
 }
 

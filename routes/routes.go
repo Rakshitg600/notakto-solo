@@ -7,5 +7,5 @@ import (
 )
 
 func RegisterRoutes(e *echo.Echo, h *handlers.Handler) {
-	e.POST("/create", h.CreateHandler, middleware.FirebaseAuthMiddleware)
+	e.POST("/create-game", h.CreateGameHandler, middleware.FirebaseAuthMiddleware)
 }

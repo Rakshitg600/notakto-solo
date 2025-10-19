@@ -1,12 +1,13 @@
 package handlers
 
 import (
-	"database/sql"
-	"errors"
 	"net/http"
 
 	"github.com/labstack/echo/v4"
+
 	db "github.com/rakshitg600/notakto-solo/db/generated"
+	"github.com/rakshitg600/notakto-solo/functions"
+	"github.com/rakshitg600/notakto-solo/types"
 )
 
 type Handler struct {
@@ -16,18 +17,44 @@ type Handler struct {
 func NewHandler(q *db.Queries) *Handler {
 	return &Handler{Queries: q}
 }
-func (h *Handler) CreateHandler(c echo.Context) error {
-	uidVal := c.Get("uid")
-	if uidVal == nil {
-		return echo.NewHTTPError(http.StatusUnauthorized, "missing uid")
+
+func (h *Handler) CreateGameHandler(c echo.Context) error {
+	// ✅ Get UID
+	uid, ok := c.Get("uid").(string)
+	if !ok || uid == "" {
+		return echo.NewHTTPError(http.StatusUnauthorized, "unauthorized: missing or invalid uid")
 	}
 
-	player, err := h.Queries.GetPlayerById(c.Request().Context(), uidVal.(string))
-	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
-			return echo.NewHTTPError(http.StatusNotFound, "player not found")
-		}
-		return echo.NewHTTPError(http.StatusInternalServerError, "failed to get player")
+	// ✅ Try binding the body
+	var req types.CreateGameRequest
+	if err := c.Bind(&req); err != nil {
+		req = types.CreateGameRequest{} // reset if malformed JSON
 	}
-	return c.JSON(http.StatusOK, player)
+
+	// ✅ Apply defaults if fields are zero or invalid
+	if req.NumberOfBoards < 1 || req.NumberOfBoards > 5{
+		req.NumberOfBoards = 3
+	}
+	if req.BoardSize < 2 || req.BoardSize > 5 {
+		req.BoardSize = 3
+	}
+	if req.Difficulty < 1 || req.Difficulty > 5 {
+		req.Difficulty = 1 
+	}
+	// ✅✅ Logic
+	sessionMap, err := functions.EnsureSession(
+		c.Request().Context(),
+		h.Queries,
+		uid,
+		req.NumberOfBoards,
+		req.BoardSize,
+		req.Difficulty,
+	)
+	//✅ Handle errors
+	if err != nil {
+        c.Logger().Errorf("EnsureSession failed: %v", err)
+        return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+    }
+
+	return c.JSON(http.StatusOK, sessionMap)
 }
