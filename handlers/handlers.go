@@ -32,17 +32,17 @@ func (h *Handler) CreateGameHandler(c echo.Context) error {
 	}
 
 	// ✅ Apply defaults if fields are zero or invalid
-	if req.NumberOfBoards < 1 || req.NumberOfBoards > 5{
+	if req.NumberOfBoards < 1 || req.NumberOfBoards > 5 {
 		req.NumberOfBoards = 3
 	}
 	if req.BoardSize < 2 || req.BoardSize > 5 {
 		req.BoardSize = 3
 	}
 	if req.Difficulty < 1 || req.Difficulty > 5 {
-		req.Difficulty = 1 
+		req.Difficulty = 1
 	}
-	// ✅✅ Logic
-	sessionMap, err := functions.EnsureSession(
+	// ✅✅ Logic: get typed values from EnsureSession
+	sessionID, uidOut, boards, currentPlayer, winner, boardSize, numberOfBoards, difficulty, gameHistory, gameover, createdAt, err := functions.EnsureSession(
 		c.Request().Context(),
 		h.Queries,
 		uid,
@@ -52,9 +52,23 @@ func (h *Handler) CreateGameHandler(c echo.Context) error {
 	)
 	//✅ Handle errors
 	if err != nil {
-        c.Logger().Errorf("EnsureSession failed: %v", err)
-        return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
-    }
+		c.Logger().Errorf("EnsureSession failed: %v", err)
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
 
-	return c.JSON(http.StatusOK, sessionMap)
+	resp := map[string]interface{}{
+		"session_id":       sessionID,
+		"uid":              uidOut,
+		"boards":           boards,
+		"current_player":   currentPlayer,
+		"winner":           winner,
+		"board_size":       boardSize,
+		"number_of_boards": numberOfBoards,
+		"difficulty":       difficulty,
+		"game_history":     gameHistory,
+		"gameover":         gameover,
+		"created_at":       createdAt,
+	}
+
+	return c.JSON(http.StatusOK, resp)
 }
