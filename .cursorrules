@@ -1,0 +1,104 @@
+project:
+  name: notakto-solo
+  language: golang
+  stack:
+    - golang
+    - echo
+    - goose
+    - sqlc
+    - postgres
+
+architecture:
+  entrypoint: cmd/server/main.go
+  description: |
+    The project follows a layered architecture built around clarity and separation of concerns:
+
+    **Flow:**  
+    middleware → routes → handler → functions → sqlc (DB)
+
+    **Packages:**
+      - **cmd/server/main.go**
+        - Application entry point.
+        - Registers middlewares and routes.
+      - **middleware/**
+        - Contains a chain of 3 middlewares, executed in order:
+          1. IP-based rate limiter  
+          2. Firebase Auth token extractor (sets `uid` in context)  
+          3. UID-based rate limiter
+      - **routes/**
+        - Defines all API endpoints and links each to the correct handler function.
+      - **handler/**
+        - Handles HTTP requests and responses.
+        - Converts incoming JSON → Go types, calls `functions`, then Go types → JSON for the response.
+      - **functions/**
+        - Contains all business logic.
+        - May call multiple SQL or logic functions as needed.
+        - Uses only `sqlc`-generated DB methods for database access.
+      - **db/**
+        - Contains SQL migrations (managed by Goose).
+        - Holds `sqlc`-generated DB query code.
+      - **types/**
+        - Contains shared Go structs, validators, enums, and common types.
+        - Used by both `handler` and `functions` to ensure consistent type definitions and validation logic.
+
+rules:
+  - Always maintain the strict call order:
+      middleware → routes → handler → functions → sqlc
+  - No business logic in routes or handlers.
+  - Middlewares must be reusable and never depend on handlers or functions.
+  - Only `functions` layer may directly call `sqlc` DB methods.
+  - All data validation and reusable struct definitions go in the `types` package.
+  - Handlers should:
+      1. Parse and validate JSON input using `types` structs and validators.
+      2. Call the appropriate `functions` method.
+      3. Return JSON-formatted response.
+  - Functions must not do request/response JSON marshaling/unmarshaling.
+  - Prefer context-aware functions (`ctx context.Context`) across all layers.
+  - SQL changes must be applied via Goose migrations under `db/migrations`, followed by regenerating sqlc code.
+  - No hardcoded queries outside of sqlc-generated code.
+  - When creating a new endpoint:
+      1. Define route in `routes/`
+      2. Implement handler in `handler/`
+      3. Add corresponding logic in `functions/`
+      4. Define any new structs or validators in `types/`
+      5. **Create a test file for the endpoint under `tests/`**
+         - Tests must cover success and failure cases.
+         - Use mocked dependencies for database or external calls.
+
+code_style:
+  - Use idiomatic Go naming:
+      - PascalCase for exported names (types, funcs, structs)
+      - camelCase for local variables
+  - Avoid global state; inject dependencies where needed.
+  - Keep each function focused and small (SRP - Single Responsibility Principle).
+  - Error handling must be explicit (`if err != nil { return ... }`).
+  - For logging or debugging, prefer context-aware logging.
+
+conventions:
+  - Route definitions live in `routes/*.go` and call handlers from `handler/`.
+  - Handler request/response structs and validators live in `types/` if reused, or locally in the handler if unique.
+  - Shared domain structs (used by multiple layers) must live in `types/`.
+  - Firebase `uid` must always be read from `context.Context`.
+  - All environment variables and configs should be centralized in a `config/` package.
+  - Package imports:
+      - Never import `handler` or `routes` inside `functions` or `middleware`.
+      - `functions` may import `db` and `types`.
+      - `handler` may import `functions` and `types`.
+
+cursor:
+  goals:
+    - Maintain the architecture integrity when generating new code.
+    - Suggest correct file placement and imports for new features.
+    - Enforce that all new logic goes inside `functions`, not handlers.
+    - Auto-complete SQL queries and Go structs using existing schema and `types`.
+    - Keep request/response JSON marshaling/unmarshaling confined to `handler` layer only.
+    - Automatically generate test skeletons when new endpoints are created.
+
+naming_conventions:
+  - Routes: 
+  - Handler functions: `Handle<Action>` (e.g., `HandleCreateSession`)
+  - Functions layer: `<Action><Entity>` (e.g., `CreateSession`, `GetUserStats`)
+  - Types:
+      - Request structs: `<Action><Entity>Request`
+      - Response structs: `<Action><Entity>Response`
+      - Validators: `<Entity>Validator`
