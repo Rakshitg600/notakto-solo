@@ -24,14 +24,38 @@ func New(db DBTX) *Queries {
 func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	q := Queries{db: db}
 	var err error
+	if q.createInitialSessionStateStmt, err = db.PrepareContext(ctx, createInitialSessionState); err != nil {
+		return nil, fmt.Errorf("error preparing query CreateInitialSessionState: %w", err)
+	}
+	if q.createSessionStmt, err = db.PrepareContext(ctx, createSession); err != nil {
+		return nil, fmt.Errorf("error preparing query CreateSession: %w", err)
+	}
+	if q.getLatestSessionStateByPlayerIdStmt, err = db.PrepareContext(ctx, getLatestSessionStateByPlayerId); err != nil {
+		return nil, fmt.Errorf("error preparing query GetLatestSessionStateByPlayerId: %w", err)
+	}
 	if q.getPlayerByIdStmt, err = db.PrepareContext(ctx, getPlayerById); err != nil {
-		return nil, fmt.Errorf("error preparing query getPlayerById: %w", err)
+		return nil, fmt.Errorf("error preparing query GetPlayerById: %w", err)
 	}
 	return &q, nil
 }
 
 func (q *Queries) Close() error {
 	var err error
+	if q.createInitialSessionStateStmt != nil {
+		if cerr := q.createInitialSessionStateStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing createInitialSessionStateStmt: %w", cerr)
+		}
+	}
+	if q.createSessionStmt != nil {
+		if cerr := q.createSessionStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing createSessionStmt: %w", cerr)
+		}
+	}
+	if q.getLatestSessionStateByPlayerIdStmt != nil {
+		if cerr := q.getLatestSessionStateByPlayerIdStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing getLatestSessionStateByPlayerIdStmt: %w", cerr)
+		}
+	}
 	if q.getPlayerByIdStmt != nil {
 		if cerr := q.getPlayerByIdStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing getPlayerByIdStmt: %w", cerr)
@@ -74,15 +98,21 @@ func (q *Queries) queryRow(ctx context.Context, stmt *sql.Stmt, query string, ar
 }
 
 type Queries struct {
-	db                DBTX
-	tx                *sql.Tx
-	getPlayerByIdStmt *sql.Stmt
+	db                                  DBTX
+	tx                                  *sql.Tx
+	createInitialSessionStateStmt       *sql.Stmt
+	createSessionStmt                   *sql.Stmt
+	getLatestSessionStateByPlayerIdStmt *sql.Stmt
+	getPlayerByIdStmt                   *sql.Stmt
 }
 
 func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 	return &Queries{
-		db:                tx,
-		tx:                tx,
-		getPlayerByIdStmt: q.getPlayerByIdStmt,
+		db:                                  tx,
+		tx:                                  tx,
+		createInitialSessionStateStmt:       q.createInitialSessionStateStmt,
+		createSessionStmt:                   q.createSessionStmt,
+		getLatestSessionStateByPlayerIdStmt: q.getLatestSessionStateByPlayerIdStmt,
+		getPlayerByIdStmt:                   q.getPlayerByIdStmt,
 	}
 }

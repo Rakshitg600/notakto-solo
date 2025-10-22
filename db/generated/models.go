@@ -9,21 +9,21 @@ import (
 )
 
 type Player struct {
-	Uid        int32          `json:"uid"`
+	Uid        string         `json:"uid"`
 	Name       string         `json:"name"`
 	Email      string         `json:"email"`
 	ProfilePic sql.NullString `json:"profile_pic"`
 }
 
 type Session struct {
-	SessionID int32        `json:"session_id"`
-	Uid       int32        `json:"uid"`
+	SessionID string       `json:"session_id"`
+	Uid       string       `json:"uid"`
 	Expired   sql.NullBool `json:"expired"`
 	CreatedAt sql.NullTime `json:"created_at"`
 }
 
 type Sessionstate struct {
-	SessionID      int32          `json:"session_id"`
+	SessionID      string         `json:"session_id"`
 	Boards         [][]string     `json:"boards"`
 	CurrentPlayer  sql.NullInt32  `json:"current_player"`
 	Winner         sql.NullString `json:"winner"`
@@ -35,7 +35,7 @@ type Sessionstate struct {
 }
 
 type Wallet struct {
-	Uid   int32         `json:"uid"`
+	Uid   string        `json:"uid"`
 	Coins sql.NullInt32 `json:"coins"`
 	Xp    sql.NullInt32 `json:"xp"`
 }
