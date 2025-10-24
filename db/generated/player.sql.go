@@ -9,11 +9,11 @@ import (
 	"context"
 )
 
-const getPlayerById = `-- name: getPlayerById :one
+const getPlayerById = `-- name: GetPlayerById :one
 SELECT uid, name, email, profile_pic FROM Player WHERE uid = $1
 `
 
-func (q *Queries) getPlayerById(ctx context.Context, uid int32) (Player, error) {
+func (q *Queries) GetPlayerById(ctx context.Context, uid string) (Player, error) {
 	row := q.queryRow(ctx, q.getPlayerByIdStmt, getPlayerById, uid)
 	var i Player
 	err := row.Scan(

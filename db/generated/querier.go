@@ -9,7 +9,10 @@ import (
 )
 
 type Querier interface {
-	getPlayerById(ctx context.Context, uid int32) (Player, error)
+	CreateInitialSessionState(ctx context.Context, arg CreateInitialSessionStateParams) error
+	CreateSession(ctx context.Context, arg CreateSessionParams) error
+	GetLatestSessionStateByPlayerId(ctx context.Context, uid string) (GetLatestSessionStateByPlayerIdRow, error)
+	GetPlayerById(ctx context.Context, uid string) (Player, error)
 }
 
 var _ Querier = (*Queries)(nil)

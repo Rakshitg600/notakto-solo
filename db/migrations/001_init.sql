@@ -8,6 +8,7 @@ CREATE TABLE Player (
     profile_pic TEXT
 );
 
+
 -- Create Session table
 CREATE TABLE Session (
     session_id SERIAL PRIMARY KEY,
