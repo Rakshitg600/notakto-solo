@@ -15,7 +15,7 @@ type FirebaseTokenInfo struct {
 	Photo   string `json:"photoUrl,omitempty"`
 }
 
-func VerifyFirebaseToken(idToken string) (string, error) {
+func VerifyFirebaseToken(idToken string) (string, string, string, string, error) {
 	url := fmt.Sprintf("https://identitytoolkit.googleapis.com/v1/accounts:lookup?key=%s", os.Getenv("FIREBASE_API_KEY"))
 
 	payload := map[string]interface{}{
@@ -28,22 +28,22 @@ func VerifyFirebaseToken(idToken string) (string, error) {
 
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
-		return "", err
+		return "", "", "", "", err
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode != http.StatusOK {
-		return "", fmt.Errorf("firebase API returned status %d", resp.StatusCode)
+		return "", "", "", "", fmt.Errorf("firebase API returned status %d", resp.StatusCode)
 	}
 
 	var result struct {
 		Users []FirebaseTokenInfo `json:"users"`
 	}
 	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
-		return "", err
+		return "", "", "", "", err
 	}
 	if len(result.Users) == 0 {
-		return "", fmt.Errorf("no user found")
+		return "", "", "", "", fmt.Errorf("no user found")
 	}
-
-	return result.Users[0].LocalID, nil
+	user := result.Users[0]
+	return user.LocalID, user.Name, user.Email, user.Photo, nil
 }
