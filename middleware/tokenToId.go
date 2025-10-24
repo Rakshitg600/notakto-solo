@@ -10,12 +10,11 @@ import (
 
 func FirebaseAuthMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {
-		authHeader := c.Request().Header.Get("Authorization")
-		if authHeader == "" {
-			return echo.NewHTTPError(http.StatusUnauthorized, "Missing Authorization header")
-		}
-
-		idToken := authHeader[len("Bearer "):]
+import (
+	"log"
+	"net/http"
+	"strings"
+)
 		uid, err := functions.VerifyFirebaseToken(idToken)
 		if err != nil {
 			return echo.NewHTTPError(http.StatusUnauthorized, "Invalid token")
