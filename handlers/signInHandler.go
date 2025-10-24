@@ -28,7 +28,7 @@ func (h *Handler) SignInHandler(c echo.Context) error {
 	if !ok || uid == "" {
 		return echo.NewHTTPError(http.StatusUnauthorized, "unauthorized: missing or invalid token")
 	}
-	profile_pic, name, email, err := functions.EnsureLogin(c.Request().Context(), h.Queries, uid, idToken)
+	profile_pic, name, email, new, err := functions.EnsureLogin(c.Request().Context(), h.Queries, uid, idToken)
 	if err != nil {
 		c.Logger().Errorf("EnsurePlayer failed: %v", err)
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
@@ -39,6 +39,7 @@ func (h *Handler) SignInHandler(c echo.Context) error {
 		Name:       name,
 		Email:      email,
 		ProfilePic: profile_pic,
+		NewAccount: new,
 	}
 	return c.JSON(http.StatusOK, resp)
 }

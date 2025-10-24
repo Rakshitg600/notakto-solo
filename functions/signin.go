@@ -9,7 +9,7 @@ import (
 
 // EnsureSession returns the latest existing session for a user, or creates a new one if none exists.
 // It returns typed values for the handler to compose the JSON response.
-func EnsureLogin(ctx context.Context, q *db.Queries, uid string, idToken string) (profile_pic string, name string, email string, err error) {
+func EnsureLogin(ctx context.Context, q *db.Queries, uid string, idToken string) (profile_pic string, name string, email string, new bool, err error) {
 	// STEP 1: Try existing session
 	existing, err := q.GetPlayerById(ctx, uid)
 	if err == nil && existing.Uid != "" {
@@ -20,12 +20,12 @@ func EnsureLogin(ctx context.Context, q *db.Queries, uid string, idToken string)
 		} else {
 			profile_pic = ""
 		}
-		return profile_pic, name, email, nil
+		return profile_pic, name, email, false, nil
 	}
 	// STEP 2: Fetch from Firebase
 	uid, name, email, profile_pic, err = VerifyFirebaseToken(idToken)
 	if err != nil {
-		return "", "", "", err
+		return "", "", "", true, err
 	}
 
 	// STEP 3: Create new player
@@ -39,7 +39,7 @@ func EnsureLogin(ctx context.Context, q *db.Queries, uid string, idToken string)
 		},
 	})
 	if err != nil {
-		return "", "", "", err
+		return "", "", "", true, err
 	}
-	return profile_pic, name, email, nil
+	return profile_pic, name, email, true, nil
 }
