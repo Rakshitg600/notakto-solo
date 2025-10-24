@@ -10,17 +10,15 @@ import (
 )
 
 // EnsureSession returns the latest existing session for a user, or creates a new one if none exists.
-// It now returns typed values instead of a generic map so the handler can compose the JSON response.
+// It returns typed values for the handler to compose the JSON response.
 func EnsureSession(ctx context.Context, q *db.Queries, uid string, numberOfBoards int32, boardSize int32, difficulty int32) (
 	sessionID string,
 	uidOut string,
-	boards [][]string,
-	currentPlayer int32,
-	winner string,
+	boards []int32,
+	winner bool,
 	boardSizeOut int32,
 	numberOfBoardsOut int32,
 	difficultyOut int32,
-	gameHistory [][][]string,
 	gameover bool,
 	createdAt time.Time,
 	err error,
@@ -31,17 +29,10 @@ func EnsureSession(ctx context.Context, q *db.Queries, uid string, numberOfBoard
 		sessionID = existing.SessionID
 		uidOut = existing.Uid
 		boards = existing.Boards
-
-		// convert sql.Null* to plain Go types with sensible defaults
-		if existing.CurrentPlayer.Valid {
-			currentPlayer = existing.CurrentPlayer.Int32
-		} else {
-			currentPlayer = 1
-		}
 		if existing.Winner.Valid {
-			winner = existing.Winner.String
+			winner = existing.Winner.Bool
 		} else {
-			winner = ""
+			winner = false
 		}
 		if existing.BoardSize.Valid {
 			boardSizeOut = existing.BoardSize.Int32
@@ -58,7 +49,6 @@ func EnsureSession(ctx context.Context, q *db.Queries, uid string, numberOfBoard
 		} else {
 			difficultyOut = 0
 		}
-		gameHistory = existing.GameHistory
 		if existing.Gameover.Valid {
 			gameover = existing.Gameover.Bool
 		} else {
@@ -70,7 +60,7 @@ func EnsureSession(ctx context.Context, q *db.Queries, uid string, numberOfBoard
 			createdAt = time.Time{}
 		}
 
-		return sessionID, uidOut, boards, currentPlayer, winner, boardSizeOut, numberOfBoardsOut, difficultyOut, gameHistory, gameover, createdAt, nil
+		return sessionID, uidOut, boards, winner, boardSizeOut, numberOfBoardsOut, difficultyOut, gameover, createdAt, nil
 	}
 
 	// STEP 2: Create a new session
@@ -78,24 +68,23 @@ func EnsureSession(ctx context.Context, q *db.Queries, uid string, numberOfBoard
 
 	// a) Insert into session
 	if err = q.CreateSession(ctx, db.CreateSessionParams{
-		SessionID: newSessionID,
-		Uid:       uid,
+		SessionID:      newSessionID,
+		Uid:            uid,
+		BoardSize:      sql.NullInt32{Int32: boardSize, Valid: true},
+		NumberOfBoards: sql.NullInt32{Int32: numberOfBoards, Valid: true},
+		Difficulty:     sql.NullInt32{Int32: difficulty, Valid: true},
 	}); err != nil {
-		return "", "", nil, 0, "", 0, 0, 0, nil, false, time.Time{}, err
+		return "", "", nil, false, 0, 0, 0, false, time.Time{}, err
 	}
 
 	// b) Insert initial session state
 	if err = q.CreateInitialSessionState(ctx, db.CreateInitialSessionStateParams{
-		SessionID:      newSessionID,
-		Boards:         [][]string{}, // empty initial boards
-		BoardSize:      sql.NullInt32{Int32: boardSize, Valid: true},
-		NumberOfBoards: sql.NullInt32{Int32: numberOfBoards, Valid: true},
-		Difficulty:     sql.NullInt32{Int32: difficulty, Valid: true},
-		GameHistory:    [][][]string{}, // empty history
+		SessionID: newSessionID,
+		Boards:    []int32{}, // empty initial boards
 	}); err != nil {
-		return "", "", nil, 0, "", 0, 0, 0, nil, false, time.Time{}, err
+		return "", "", nil, false, 0, 0, 0, false, time.Time{}, err
 	}
 
 	// STEP 3: Return newly created session state values
-	return newSessionID, uid, [][]string{}, 1, "", boardSize, numberOfBoards, difficulty, [][][]string{}, false, time.Now(), nil
+	return newSessionID, uid, []int32{}, false, boardSize, numberOfBoards, difficulty, false, time.Now(), nil
 }

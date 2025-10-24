@@ -1,4 +1,9 @@
-Ensure uniqueness of session id 
-Create middleware tables in db 
-shift attributes from sstate to session table and remove some attributes if possible
-change the data type of boards and gamehistory to array of bool only and the array too kept 1 D only 
+1. Ensure uniqueness of session id []
+2. Create middleware tables in db []
+3. shift attributes from sstate to session table and remove some attributes if possible []
+4. change the data type of boards and gamehistory to array of bool only and the array too kept 1 D only [] 
+5. signin endpoint []
+6. profile pic []
+7. 15 minutes of playable time instead of total elapsed time []
+8. Find race conditions and manage concurrency []
+9. Find memory leaks []

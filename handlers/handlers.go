@@ -41,8 +41,9 @@ func (h *Handler) CreateGameHandler(c echo.Context) error {
 	if req.Difficulty < 1 || req.Difficulty > 5 {
 		req.Difficulty = 1
 	}
+
 	// ✅✅ Logic: get typed values from EnsureSession
-	sessionID, uidOut, boards, currentPlayer, winner, boardSize, numberOfBoards, difficulty, gameHistory, gameover, createdAt, err := functions.EnsureSession(
+	sessionID, uidOut, boards, winner, boardSize, numberOfBoards, difficulty, gameover, createdAt, err := functions.EnsureSession(
 		c.Request().Context(),
 		h.Queries,
 		uid,
@@ -50,7 +51,7 @@ func (h *Handler) CreateGameHandler(c echo.Context) error {
 		req.BoardSize,
 		req.Difficulty,
 	)
-	//✅ Handle errors
+	// ✅ Handle errors
 	if err != nil {
 		c.Logger().Errorf("EnsureSession failed: %v", err)
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
@@ -60,12 +61,10 @@ func (h *Handler) CreateGameHandler(c echo.Context) error {
 		"session_id":       sessionID,
 		"uid":              uidOut,
 		"boards":           boards,
-		"current_player":   currentPlayer,
 		"winner":           winner,
 		"board_size":       boardSize,
 		"number_of_boards": numberOfBoards,
 		"difficulty":       difficulty,
-		"game_history":     gameHistory,
 		"gameover":         gameover,
 		"created_at":       createdAt,
 	}

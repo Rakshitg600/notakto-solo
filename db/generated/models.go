@@ -16,22 +16,20 @@ type Player struct {
 }
 
 type Session struct {
-	SessionID string       `json:"session_id"`
-	Uid       string       `json:"uid"`
-	Expired   sql.NullBool `json:"expired"`
-	CreatedAt sql.NullTime `json:"created_at"`
+	SessionID      string        `json:"session_id"`
+	Uid            string        `json:"uid"`
+	CreatedAt      sql.NullTime  `json:"created_at"`
+	Gameover       sql.NullBool  `json:"gameover"`
+	Winner         sql.NullBool  `json:"winner"`
+	BoardSize      sql.NullInt32 `json:"board_size"`
+	NumberOfBoards sql.NullInt32 `json:"number_of_boards"`
+	Difficulty     sql.NullInt32 `json:"difficulty"`
 }
 
 type Sessionstate struct {
-	SessionID      string         `json:"session_id"`
-	Boards         [][]string     `json:"boards"`
-	CurrentPlayer  sql.NullInt32  `json:"current_player"`
-	Winner         sql.NullString `json:"winner"`
-	BoardSize      sql.NullInt32  `json:"board_size"`
-	NumberOfBoards sql.NullInt32  `json:"number_of_boards"`
-	Difficulty     sql.NullInt32  `json:"difficulty"`
-	GameHistory    [][][]string   `json:"game_history"`
-	Gameover       sql.NullBool   `json:"gameover"`
+	SessionID     string        `json:"session_id"`
+	CurrentPlayer sql.NullInt32 `json:"current_player"`
+	Boards        []int32       `json:"boards"`
 }
 
 type Wallet struct {
