@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"os"
 )
 
 type FirebaseTokenInfo struct {
@@ -15,7 +16,7 @@ type FirebaseTokenInfo struct {
 }
 
 func VerifyFirebaseToken(idToken string) (string, error) {
-	url := fmt.Sprintf("https://identitytoolkit.googleapis.com/v1/accounts:lookup?key=%s", "AIzaSyBmSkCnePbHTi2BcngOIVekwP7CxJJ0SzQ")
+	url := fmt.Sprintf("https://identitytoolkit.googleapis.com/v1/accounts:lookup?key=%s", os.Getenv("FIREBASE_API_KEY"))
 
 	payload := map[string]interface{}{
 		"idToken": idToken,
@@ -30,6 +31,9 @@ func VerifyFirebaseToken(idToken string) (string, error) {
 		return "", err
 	}
 	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		return "", fmt.Errorf("firebase API returned status %d", resp.StatusCode)
+	}
 
 	var result struct {
 		Users []FirebaseTokenInfo `json:"users"`

@@ -10,3 +10,4 @@
 10. middlewares and their chaining and their database tables
 11. Caching 
 12. New Solo Mode with 1 minute timer from last move
+13. Consider all possible network partitions and make server robust
