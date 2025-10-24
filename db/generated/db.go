@@ -27,6 +27,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.createInitialSessionStateStmt, err = db.PrepareContext(ctx, createInitialSessionState); err != nil {
 		return nil, fmt.Errorf("error preparing query CreateInitialSessionState: %w", err)
 	}
+	if q.createPlayerStmt, err = db.PrepareContext(ctx, createPlayer); err != nil {
+		return nil, fmt.Errorf("error preparing query CreatePlayer: %w", err)
+	}
 	if q.createSessionStmt, err = db.PrepareContext(ctx, createSession); err != nil {
 		return nil, fmt.Errorf("error preparing query CreateSession: %w", err)
 	}
@@ -44,6 +47,11 @@ func (q *Queries) Close() error {
 	if q.createInitialSessionStateStmt != nil {
 		if cerr := q.createInitialSessionStateStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing createInitialSessionStateStmt: %w", cerr)
+		}
+	}
+	if q.createPlayerStmt != nil {
+		if cerr := q.createPlayerStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing createPlayerStmt: %w", cerr)
 		}
 	}
 	if q.createSessionStmt != nil {
@@ -101,6 +109,7 @@ type Queries struct {
 	db                                  DBTX
 	tx                                  *sql.Tx
 	createInitialSessionStateStmt       *sql.Stmt
+	createPlayerStmt                    *sql.Stmt
 	createSessionStmt                   *sql.Stmt
 	getLatestSessionStateByPlayerIdStmt *sql.Stmt
 	getPlayerByIdStmt                   *sql.Stmt
@@ -111,6 +120,7 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		db:                                  tx,
 		tx:                                  tx,
 		createInitialSessionStateStmt:       q.createInitialSessionStateStmt,
+		createPlayerStmt:                    q.createPlayerStmt,
 		createSessionStmt:                   q.createSessionStmt,
 		getLatestSessionStateByPlayerIdStmt: q.getLatestSessionStateByPlayerIdStmt,
 		getPlayerByIdStmt:                   q.getPlayerByIdStmt,

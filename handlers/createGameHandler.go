@@ -5,18 +5,9 @@ import (
 
 	"github.com/labstack/echo/v4"
 
-	db "github.com/rakshitg600/notakto-solo/db/generated"
 	"github.com/rakshitg600/notakto-solo/functions"
 	"github.com/rakshitg600/notakto-solo/types"
 )
-
-type Handler struct {
-	Queries *db.Queries
-}
-
-func NewHandler(q *db.Queries) *Handler {
-	return &Handler{Queries: q}
-}
 
 func (h *Handler) CreateGameHandler(c echo.Context) error {
 	// ✅ Get UID

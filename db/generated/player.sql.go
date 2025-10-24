@@ -7,7 +7,30 @@ package db
 
 import (
 	"context"
+	"database/sql"
 )
+
+const createPlayer = `-- name: CreatePlayer :exec
+INSERT INTO Player (uid, email, name, profile_pic)
+VALUES ($1, $2, $3, $4)
+`
+
+type CreatePlayerParams struct {
+	Uid        string         `json:"uid"`
+	Email      string         `json:"email"`
+	Name       string         `json:"name"`
+	ProfilePic sql.NullString `json:"profile_pic"`
+}
+
+func (q *Queries) CreatePlayer(ctx context.Context, arg CreatePlayerParams) error {
+	_, err := q.exec(ctx, q.createPlayerStmt, createPlayer,
+		arg.Uid,
+		arg.Email,
+		arg.Name,
+		arg.ProfilePic,
+	)
+	return err
+}
 
 const getPlayerById = `-- name: GetPlayerById :one
 SELECT uid, name, email, profile_pic FROM Player WHERE uid = $1
