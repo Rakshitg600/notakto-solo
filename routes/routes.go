@@ -10,6 +10,6 @@ func RegisterRoutes(e *echo.Echo, h *handlers.Handler) {
 	e.POST("/v1/create-game", h.CreateGameHandler, middleware.FirebaseAuthMiddleware)
 	e.POST("/v1/sign-in", h.SignInHandler, middleware.FirebaseAuthMiddleware)
 	e.POST("/v1/update-name", h.UpdateNameHandler, middleware.FirebaseAuthMiddleware)
-	e.HEAD("/v1/health", h.HealthHeadHandler)
-	e.GET("/health", h.HealthGetHandler)
+	e.HEAD("/v1/health-head", h.HealthHeadHandler)
+	e.GET("/v1/health-get", h.HealthGetHandler)
 }
