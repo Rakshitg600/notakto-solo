@@ -14,6 +14,7 @@ type Querier interface {
 	CreateSession(ctx context.Context, arg CreateSessionParams) error
 	GetLatestSessionStateByPlayerId(ctx context.Context, uid string) (GetLatestSessionStateByPlayerIdRow, error)
 	GetPlayerById(ctx context.Context, uid string) (Player, error)
+	UpdatePlayerName(ctx context.Context, arg UpdatePlayerNameParams) (Player, error)
 }
 
 var _ Querier = (*Queries)(nil)

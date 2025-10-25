@@ -39,6 +39,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.getPlayerByIdStmt, err = db.PrepareContext(ctx, getPlayerById); err != nil {
 		return nil, fmt.Errorf("error preparing query GetPlayerById: %w", err)
 	}
+	if q.updatePlayerNameStmt, err = db.PrepareContext(ctx, updatePlayerName); err != nil {
+		return nil, fmt.Errorf("error preparing query UpdatePlayerName: %w", err)
+	}
 	return &q, nil
 }
 
@@ -67,6 +70,11 @@ func (q *Queries) Close() error {
 	if q.getPlayerByIdStmt != nil {
 		if cerr := q.getPlayerByIdStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing getPlayerByIdStmt: %w", cerr)
+		}
+	}
+	if q.updatePlayerNameStmt != nil {
+		if cerr := q.updatePlayerNameStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing updatePlayerNameStmt: %w", cerr)
 		}
 	}
 	return err
@@ -113,6 +121,7 @@ type Queries struct {
 	createSessionStmt                   *sql.Stmt
 	getLatestSessionStateByPlayerIdStmt *sql.Stmt
 	getPlayerByIdStmt                   *sql.Stmt
+	updatePlayerNameStmt                *sql.Stmt
 }
 
 func (q *Queries) WithTx(tx *sql.Tx) *Queries {
@@ -124,5 +133,6 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		createSessionStmt:                   q.createSessionStmt,
 		getLatestSessionStateByPlayerIdStmt: q.getLatestSessionStateByPlayerIdStmt,
 		getPlayerByIdStmt:                   q.getPlayerByIdStmt,
+		updatePlayerNameStmt:                q.updatePlayerNameStmt,
 	}
 }
