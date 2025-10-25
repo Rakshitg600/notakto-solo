@@ -7,7 +7,8 @@
 7. 15 minutes of playable time instead of total elapsed time []
 8. Find race conditions and manage concurrency []
 9. Find memory leaks []
-10. middlewares and their chaining and their database tables
-11. Caching 
-12. New Solo Mode with 1 minute timer from last move
-13. Consider all possible network partitions and make server robust
+10. middlewares and their chaining and their database tables []
+11. Caching []
+12. New Solo Mode with 1 minute timer from last move []
+13. Consider all possible network partitions and make server robust []
+14. Firebase api vs sdk []

@@ -47,3 +47,24 @@ func (q *Queries) GetPlayerById(ctx context.Context, uid string) (Player, error)
 	)
 	return i, err
 }
+
+const updatePlayerName = `-- name: UpdatePlayerName :one
+UPDATE Player SET name = $2 WHERE uid = $1 RETURNING uid, name, email, profile_pic
+`
+
+type UpdatePlayerNameParams struct {
+	Uid  string `json:"uid"`
+	Name string `json:"name"`
+}
+
+func (q *Queries) UpdatePlayerName(ctx context.Context, arg UpdatePlayerNameParams) (Player, error) {
+	row := q.queryRow(ctx, q.updatePlayerNameStmt, updatePlayerName, arg.Uid, arg.Name)
+	var i Player
+	err := row.Scan(
+		&i.Uid,
+		&i.Name,
+		&i.Email,
+		&i.ProfilePic,
+	)
+	return i, err
+}

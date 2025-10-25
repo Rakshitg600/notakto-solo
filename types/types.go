@@ -20,3 +20,6 @@ type FirebaseTokenInfo struct {
 	Name    string `json:"displayName,omitempty"`
 	Photo   string `json:"photoUrl,omitempty"`
 }
+type UpdatePlayerNameRequest struct {
+	Name string `json:"name"`
+}
