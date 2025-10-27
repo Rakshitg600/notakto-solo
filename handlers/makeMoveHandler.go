@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"log"
 	"net/http"
 
 	"github.com/labstack/echo/v4"
@@ -15,6 +16,7 @@ func (h *Handler) MakeMoveHandler(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusUnauthorized, "unauthorized: missing or invalid uid")
 	}
 
+	log.Printf("MakeMoveHandler called for uid: %s", uid)
 	// ✅ Try binding the body
 	var req types.MakeMoveRequest
 	if err := c.Bind(&req); err != nil {
@@ -40,6 +42,6 @@ func (h *Handler) MakeMoveHandler(c echo.Context) error {
 		"coinsRewarded": coinsRewarded,
 		"xpRewarded":    xpRewarded,
 	}
-
+	log.Printf("MakeMoveHandler completed for uid: %s, sessionID: %s, boardIndex: %d, cellIndex: %d, gameOver: %v, winner: %v, coinsRewarded: %d, xpRewarded: %d", uid, req.SessionID, req.BoardIndex, req.CellIndex, gameOver, winner, coinsRewarded, xpRewarded)
 	return c.JSON(http.StatusOK, resp)
 }
