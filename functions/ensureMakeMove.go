@@ -94,7 +94,7 @@ func EnsureMakeMove(ctx context.Context, q *db.Queries, uid string, sessionID st
 	}
 	// 9.3 If not gameover, AI makes a move
 	if existing.Gameover.Valid && !existing.Gameover.Bool {
-		aiMoveIndex := GetAIMove(existing.Boards, boardSize, existing.NumberOfBoards.Int32)
+		aiMoveIndex := GetAIMove(existing.Boards, boardSize, existing.NumberOfBoards.Int32, existing.Difficulty.Int32)
 		existing.Boards = append(existing.Boards, aiMoveIndex)
 		// Check for gameover after AI move
 		existing.Gameover = sql.NullBool{Bool: true, Valid: true}
