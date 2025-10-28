@@ -5,10 +5,10 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strings"
 
 	"github.com/joho/godotenv"
 	"github.com/labstack/echo/v4"
-	"github.com/labstack/echo/v4/middleware"
 	_ "github.com/lib/pq"
 	db "github.com/rakshitg600/notakto-solo/db/generated"
 	"github.com/rakshitg600/notakto-solo/handlers"
@@ -37,22 +37,30 @@ func main() {
 
 	e := echo.New()
 	// ✅ Enable CORS for frontend (Next.js at localhost:3000)
-	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
-		AllowOrigins: []string{"http://localhost:3000", "https://deploy-preview-355--staging-notakto.netlify.app/", "https://deploy-preview-356--staging-notakto.netlify.app/"},
-		AllowMethods: []string{
-			http.MethodGet,
-			http.MethodPost,
-			http.MethodPut,
-			http.MethodDelete,
-			http.MethodOptions,
-		},
-		AllowHeaders: []string{
-			echo.HeaderOrigin,
-			echo.HeaderContentType,
-			echo.HeaderAccept,
-			echo.HeaderAuthorization,
-		},
-	}))
+	e.Use(func(next echo.HandlerFunc) echo.HandlerFunc {
+		return func(c echo.Context) error {
+			origin := c.Request().Header.Get("Origin")
+
+			// Allow local dev and any Netlify preview or staging URLs
+			if origin == "http://localhost:3000" ||
+				origin == "https://staging-notakto.netlify.app" ||
+				(strings.HasSuffix(origin, "--staging-notakto.netlify.app") &&
+					strings.HasPrefix(origin, "https://deploy-preview-")) {
+
+				c.Response().Header().Set("Access-Control-Allow-Origin", origin)
+				c.Response().Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+				c.Response().Header().Set("Access-Control-Allow-Headers", "Origin, Content-Type, Accept, Authorization")
+				c.Response().Header().Set("Access-Control-Allow-Credentials", "true")
+			}
+
+			// Handle preflight requests explicitly
+			if c.Request().Method == http.MethodOptions {
+				return c.NoContent(http.StatusNoContent)
+			}
+
+			return next(c)
+		}
+	})
 
 	routes.RegisterRoutes(e, handler)
 	e.Logger.Fatal(e.Start(":1323"))
