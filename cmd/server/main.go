@@ -38,7 +38,7 @@ func main() {
 	e := echo.New()
 	// ✅ Enable CORS for frontend (Next.js at localhost:3000)
 	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
-		AllowOrigins: []string{"http://localhost:3000", "https://deploy-preview-355--staging-notakto.netlify.app/"},
+		AllowOrigins: []string{"http://localhost:3000", "https://deploy-preview-355--staging-notakto.netlify.app/", "https://deploy-preview-356--staging-notakto.netlify.app/"},
 		AllowMethods: []string{
 			http.MethodGet,
 			http.MethodPost,
