@@ -36,7 +36,6 @@ func main() {
 
 	e := echo.New()
 	e.Use(middleware.CORSMiddleware)
-	e.Use(middleware.FirebaseAuthMiddleware)
 	routes.RegisterRoutes(e, handler)
 	e.Logger.Fatal(e.Start(":1323"))
 }
