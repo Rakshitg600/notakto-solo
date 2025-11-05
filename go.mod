@@ -7,8 +7,6 @@ require (
 	github.com/labstack/echo/v4 v4.13.4
 )
 
-require golang.org/x/time v0.11.0 // indirect
-
 require (
 	github.com/joho/godotenv v1.5.1
 	github.com/labstack/gommon v0.4.2 // indirect
