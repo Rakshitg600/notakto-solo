@@ -13,6 +13,7 @@ func CORSMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 
 		if origin == "http://localhost:3000" ||
 			origin == "https://notakto.xyz" ||
+			origin == "https://www.notakto.xyz" ||
 			origin == "https://notakto.vercel.app" ||
 			origin == "https://staging-notakto.netlify.app" ||
 			(strings.HasSuffix(origin, "--staging-notakto.netlify.app") &&
