@@ -12,6 +12,7 @@ import (
 	_ "github.com/lib/pq"
 	db "github.com/rakshitg600/notakto-solo/db/generated"
 	"github.com/rakshitg600/notakto-solo/handlers"
+	"github.com/rakshitg600/notakto-solo/middleware"
 	"github.com/rakshitg600/notakto-solo/routes"
 )
 
