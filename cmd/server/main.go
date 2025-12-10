@@ -12,6 +12,7 @@ import (
 	_ "github.com/lib/pq"
 	db "github.com/rakshitg600/notakto-solo/db/generated"
 	"github.com/rakshitg600/notakto-solo/handlers"
+	"github.com/rakshitg600/notakto-solo/middleware"
 	"github.com/rakshitg600/notakto-solo/routes"
 )
 
@@ -36,6 +37,7 @@ func main() {
 	handler := handlers.NewHandler(queries)
 
 	e := echo.New()
+	e.Use(middleware.CORSMiddleware)
 	// ✅ Enable CORS for frontend (Next.js at localhost:3000)
 	e.Use(func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error {
