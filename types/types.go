@@ -23,3 +23,14 @@ type FirebaseTokenInfo struct {
 type UpdatePlayerNameRequest struct {
 	Name string `json:"name"`
 }
+type CreateGameResponse struct {
+	SessionId      string  `json:"sessionId"`
+	Uid            string  `json:"uid"`
+	Boards         []int32 `json:"boards"`
+	Winner         bool    `json:"winner"`
+	BoardSize      int32   `json:"boardSize"`
+	NumberOfBoards int32   `json:"numberOfBoards"`
+	Difficulty     int32   `json:"difficulty"`
+	Gameover       bool    `json:"gameover"`
+	CreatedAt      string  `json:"createdAt"`
+}
