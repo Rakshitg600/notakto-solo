@@ -15,8 +15,8 @@ func CORSMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 			origin == "https://notakto.xyz" ||
 			origin == "https://www.notakto.xyz" ||
 			origin == "https://notakto.vercel.app" ||
-			origin == "https://staging-notakto.netlify.app" ||
-			(strings.HasSuffix(origin, "--staging-notakto.netlify.app") &&
+			origin == "https://notakto-staging.netlify.app" ||
+			(strings.HasSuffix(origin, "--notakto-staging.netlify.app") &&
 				strings.HasPrefix(origin, "https://deploy-preview-")) {
 
 			h := c.Response().Header()
