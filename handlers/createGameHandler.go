@@ -3,6 +3,7 @@ package handlers
 import (
 	"log"
 	"net/http"
+	"time"
 
 	"github.com/labstack/echo/v4"
 
@@ -34,6 +35,8 @@ func (h *Handler) CreateGameHandler(c echo.Context) error {
 		req.Difficulty = 1
 	}
 
+	log.Printf("create game handler called for uid: %s", uid)
+
 	// ✅✅ Logic: get typed values from EnsureSession
 	sessionID, uidOut, boards, winner, boardSize, numberOfBoards, difficulty, gameover, createdAt, err := functions.EnsureSession(
 		c.Request().Context(),
@@ -49,16 +52,18 @@ func (h *Handler) CreateGameHandler(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
 
-	resp := map[string]interface{}{
-		"session_id":       sessionID,
-		"uid":              uidOut,
-		"boards":           boards,
-		"winner":           winner,
-		"board_size":       boardSize,
-		"number_of_boards": numberOfBoards,
-		"difficulty":       difficulty,
-		"gameover":         gameover,
-		"created_at":       createdAt,
+	createdAtStr := createdAt.UTC().Format(time.RFC3339)
+
+	resp := types.CreateGameResponse{
+		SessionId:      sessionID,
+		Uid:            uidOut,
+		Boards:         boards,
+		Winner:         winner,
+		BoardSize:      boardSize,
+		NumberOfBoards: numberOfBoards,
+		Difficulty:     difficulty,
+		Gameover:       gameover,
+		CreatedAt:      createdAtStr,
 	}
 	log.Printf("Created new game session for user %s: sessionID=%s, boards=%v, boardSize=%d, numberOfBoards=%d, difficulty=%d", uid, sessionID, boards, boardSize, numberOfBoards, difficulty)
 	return c.JSON(http.StatusOK, resp)
