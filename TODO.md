@@ -16,3 +16,4 @@
 16. Transactions implementation []
 17. Architecture fix to decide how to share state between services especially Wallet table []
 18. Improve error handling 
+19. DB transactions in APIs
