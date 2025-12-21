@@ -1,6 +1,6 @@
 package functions
 
-func IsBoardDead(boardIndex int32, boards []int32, boardSize int32, numberOfBoards int32) bool {
+func IsBoardDead(boardIndex int32, boards []int32, boardSize int32) bool {
 	start := boardIndex * boardSize * boardSize
 	end := start + boardSize*boardSize
 

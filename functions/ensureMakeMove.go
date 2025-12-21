@@ -38,7 +38,7 @@ func EnsureMakeMove(ctx context.Context, q *db.Queries, uid string, sessionID st
 		return nil, false, false, 0, 0, errors.New("invalid cell index")
 	}
 	// STEP 5: Validate if board is alive
-	boardDead := IsBoardDead(boardIndex, existing.Boards, boardSize, existing.NumberOfBoards.Int32)
+	boardDead := IsBoardDead(boardIndex, existing.Boards, boardSize)
 	if boardDead {
 		return nil, false, false, 0, 0, errors.New("selected board is already dead")
 	}
@@ -54,7 +54,7 @@ func EnsureMakeMove(ctx context.Context, q *db.Queries, uid string, sessionID st
 	// STEP 8: Check for gameover
 	existing.Gameover = sql.NullBool{Bool: true, Valid: true}
 	for i := int32(0); i < existing.NumberOfBoards.Int32; i++ {
-		if !IsBoardDead(i, existing.Boards, boardSize, existing.NumberOfBoards.Int32) {
+		if !IsBoardDead(i, existing.Boards, boardSize) {
 			existing.Gameover = sql.NullBool{Bool: false, Valid: true}
 			break
 		}
@@ -95,11 +95,15 @@ func EnsureMakeMove(ctx context.Context, q *db.Queries, uid string, sessionID st
 	// 9.3 If not gameover, AI makes a move
 	if existing.Gameover.Valid && !existing.Gameover.Bool {
 		aiMoveIndex := GetAIMove(existing.Boards, boardSize, existing.NumberOfBoards.Int32, existing.Difficulty.Int32)
+		if aiMoveIndex == -1 {
+			// No valid moves for AI - this shouldn't happen if game is not over
+			return existing.Boards, false, false, 0, 0, errors.New("AI could not find a valid move")
+		}
 		existing.Boards = append(existing.Boards, aiMoveIndex)
 		// Check for gameover after AI move
 		existing.Gameover = sql.NullBool{Bool: true, Valid: true}
 		for i := int32(0); i < existing.NumberOfBoards.Int32; i++ {
-			if !IsBoardDead(i, existing.Boards, boardSize, existing.NumberOfBoards.Int32) {
+			if !IsBoardDead(i, existing.Boards, boardSize) {
 				existing.Gameover = sql.NullBool{Bool: false, Valid: true}
 				break
 			}

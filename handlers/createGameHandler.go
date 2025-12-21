@@ -35,8 +35,6 @@ func (h *Handler) CreateGameHandler(c echo.Context) error {
 		req.Difficulty = 1
 	}
 
-	log.Printf("create game handler called for uid: %s", uid)
-
 	// ✅✅ Logic: get typed values from EnsureSession
 	sessionID, uidOut, boards, winner, boardSize, numberOfBoards, difficulty, gameover, createdAt, err := functions.EnsureSession(
 		c.Request().Context(),

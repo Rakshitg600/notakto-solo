@@ -17,3 +17,6 @@
 17. Architecture fix to decide how to share state between services especially Wallet table []
 18. Improve error handling 
 19. DB transactions in APIs
+20. Error Handling
+21. only one api call at a time for a user
+22. remove and change logging

@@ -6,33 +6,6 @@ import (
 	"time"
 )
 
-// getWinPatterns generates win patterns for a single board of given size.
-func getWinPatterns(size int32) [][]int32 {
-	patterns := [][]int32{}
-
-	// Rows & Columns
-	for i := int32(0); i < size; i++ {
-		row := make([]int32, size)
-		col := make([]int32, size)
-		for j := int32(0); j < size; j++ {
-			row[j] = i*size + j
-			col[j] = i + j*size
-		}
-		patterns = append(patterns, row, col)
-	}
-
-	// Diagonals
-	diag1 := make([]int32, size)
-	diag2 := make([]int32, size)
-	for i := int32(0); i < size; i++ {
-		diag1[i] = i * (size + 1)
-		diag2[i] = (i + 1) * (size - 1)
-	}
-	patterns = append(patterns, diag1, diag2)
-
-	return patterns
-}
-
 // Convert slice to lookup map for O(1) membership checks
 func makeBoardSet(boards []int32) map[int32]bool {
 	set := make(map[int32]bool, len(boards))
@@ -40,27 +13,6 @@ func makeBoardSet(boards []int32) map[int32]bool {
 		set[idx] = true
 	}
 	return set
-}
-
-// Check if a given board (by index) is dead
-func isBoardDead(boardIndex int32, boards []int32, boardSize int32) bool {
-	set := makeBoardSet(boards)
-	boardOffset := boardIndex * boardSize * boardSize
-	patterns := getWinPatterns(boardSize)
-
-	for _, pat := range patterns {
-		allMarked := true
-		for _, cell := range pat {
-			if !set[boardOffset+cell] {
-				allMarked = false
-				break
-			}
-		}
-		if allMarked {
-			return true
-		}
-	}
-	return false
 }
 
 // Heuristic: favor center cells
@@ -78,7 +30,7 @@ func getValidMoves(boards []int32, boardSize, numberOfBoards int32) []int32 {
 	moves := []int32{}
 
 	for b := int32(0); b < numberOfBoards; b++ {
-		if isBoardDead(b, boards, boardSize) {
+		if IsBoardDead(b, boards, boardSize) {
 			continue
 		}
 		boardOffset := b * boardSize * boardSize
@@ -126,7 +78,7 @@ func GetAIMove(boards []int32, boardSize int32, numberOfBoards int32, difficulty
 	// Count live boards
 	liveCount := int32(0)
 	for b := int32(0); b < numberOfBoards; b++ {
-		if !isBoardDead(b, boards, boardSize) {
+		if !IsBoardDead(b, boards, boardSize) {
 			liveCount++
 		}
 	}
@@ -137,7 +89,7 @@ func GetAIMove(boards []int32, boardSize int32, numberOfBoards int32, difficulty
 	for _, m := range moves {
 		next := updateBoards(boards, m)
 		boardIndex := m / (boardSize * boardSize)
-		if isBoardDead(boardIndex, next, boardSize) {
+		if IsBoardDead(boardIndex, next, boardSize) {
 			killing = append(killing, m)
 		} else {
 			nonKilling = append(nonKilling, m)
