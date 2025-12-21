@@ -23,6 +23,11 @@ type FirebaseTokenInfo struct {
 type UpdatePlayerNameRequest struct {
 	Name string `json:"name"`
 }
+type MakeMoveRequest struct {
+	SessionID  string `json:"sessionId"`
+	BoardIndex int32  `json:"boardIndex"`
+	CellIndex  int32  `json:"cellIndex"`
+}
 type CreateGameResponse struct {
 	SessionId      string  `json:"sessionId"`
 	Uid            string  `json:"uid"`
@@ -33,4 +38,11 @@ type CreateGameResponse struct {
 	Difficulty     int32   `json:"difficulty"`
 	Gameover       bool    `json:"gameover"`
 	CreatedAt      string  `json:"createdAt"`
+}
+type MakeMoveResponse struct {
+	Boards        []int32 `json:"boards"`
+	Gameover      bool    `json:"gameover"`
+	Winner        bool    `json:"winner"`
+	CoinsRewarded int32   `json:"coinsRewarded"`
+	XpRewarded    int32   `json:"xpRewarded"`
 }

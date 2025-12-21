@@ -43,6 +43,6 @@ func (h *Handler) SignInHandler(c echo.Context) error {
 		ProfilePic: profile_pic,
 		NewAccount: new,
 	}
-	log.Printf("SignInHandler response for uid %s: %+v", uid, resp)
+	log.Printf("User signed in: %s (new account: %v), name: %s, email %s, profilePic: %s", uid, new, name, email, profile_pic)
 	return c.JSON(http.StatusOK, resp)
 }
