@@ -3,7 +3,6 @@ package functions
 import (
 	"math"
 	"math/rand"
-	"time"
 )
 
 // Convert slice to lookup map for O(1) membership checks
@@ -69,7 +68,6 @@ func GetAIMove(boards []int32, boardSize int32, numberOfBoards int32, difficulty
 		return -1
 	}
 
-	rand.Seed(time.Now().UnixNano())
 	optimalChance := float64(difficulty-1) / 4.0 // 0 @ diff=1 → 1 @ diff=5
 	if rand.Float64() > optimalChance {
 		return moves[rand.Intn(len(moves))]
