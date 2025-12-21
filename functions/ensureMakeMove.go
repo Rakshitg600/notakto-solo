@@ -38,8 +38,8 @@ func EnsureMakeMove(ctx context.Context, q *db.Queries, uid string, sessionID st
 		return nil, false, false, 0, 0, errors.New("invalid cell index")
 	}
 	// STEP 5: Validate if board is alive
-	boardAlive := IsBoardDead(boardIndex, existing.Boards, boardSize, existing.NumberOfBoards.Int32)
-	if !boardAlive {
+	boardDead := IsBoardDead(boardIndex, existing.Boards, boardSize, existing.NumberOfBoards.Int32)
+	if boardDead {
 		return nil, false, false, 0, 0, errors.New("selected board is already dead")
 	}
 	// STEP 6: Validate if cell is already marked
@@ -116,6 +116,14 @@ func EnsureMakeMove(ctx context.Context, q *db.Queries, uid string, sessionID st
 		})
 		if err != nil {
 			return nil, existing.Gameover.Valid && existing.Gameover.Bool, existing.Winner.Valid && existing.Winner.Bool, 0, 0, err
+		}
+		if existing.Gameover.Valid && !existing.Gameover.Bool {
+			return existing.Boards,
+				false,
+				false,
+				0,
+				0,
+				nil
 		}
 		// If gameover after AI move, update session
 		if existing.Gameover.Valid && existing.Gameover.Bool {

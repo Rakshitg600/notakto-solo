@@ -35,12 +35,12 @@ func (h *Handler) MakeMoveHandler(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
 
-	resp := map[string]interface{}{
-		"boards":        boards,
-		"gameover":      gameOver,
-		"winner":        winner,
-		"coinsRewarded": coinsRewarded,
-		"xpRewarded":    xpRewarded,
+	resp := types.MakeMoveResponse{
+		Boards:        boards,
+		Gameover:      gameOver,
+		Winner:        winner,
+		CoinsRewarded: coinsRewarded,
+		XpRewarded:    xpRewarded,
 	}
 	log.Printf("MakeMoveHandler completed for uid: %s, sessionID: %s, boardIndex: %d, cellIndex: %d, gameOver: %v, winner: %v, coinsRewarded: %d, xpRewarded: %d", uid, req.SessionID, req.BoardIndex, req.CellIndex, gameOver, winner, coinsRewarded, xpRewarded)
 	return c.JSON(http.StatusOK, resp)

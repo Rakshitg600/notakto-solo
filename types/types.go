@@ -39,3 +39,10 @@ type CreateGameResponse struct {
 	Gameover       bool    `json:"gameover"`
 	CreatedAt      string  `json:"createdAt"`
 }
+type MakeMoveResponse struct {
+	Boards        []int32 `json:"boards"`
+	Gameover      bool    `json:"gameover"`
+	Winner        bool    `json:"winner"`
+	CoinsRewarded int32   `json:"coinsRewarded"`
+	XpRewarded    int32   `json:"xpRewarded"`
+}
