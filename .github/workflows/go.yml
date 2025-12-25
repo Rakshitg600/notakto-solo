@@ -78,7 +78,7 @@ jobs:
 
     - name: Run Goose Migrations on DEV
       env:
-        DATABASE_URL: ${{ secrets.DATABASE_DEV_URL }}
+        DATABASE_DEV_URL: ${{ secrets.DATABASE_DEV_URL }}
       run: |
-        goose -dir db/migrations postgres "$DATABASE_URL" up
+        goose -dir db/migrations postgres "$DATABASE_DEV_URL" up
         echo "✅ DEV DB UPDATED!"
