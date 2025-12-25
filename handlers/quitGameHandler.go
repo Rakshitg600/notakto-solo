@@ -25,7 +25,7 @@ func (h *Handler) QuitGameHandler(c echo.Context) error {
 	if err != nil {
 		c.Logger().Errorf("EnsureQuitGame failed: %v", err)
 		return c.JSON(http.StatusOK, types.QuitGameResponse{
-			Success: false,
+			Success: success,
 			Error:   err.Error(),
 		})
 	}

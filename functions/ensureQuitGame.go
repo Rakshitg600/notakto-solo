@@ -21,7 +21,7 @@ func EnsureQuitGame(ctx context.Context, q *db.Queries, uid string, sessionID st
 	}
 	// STEP 2: Validate gameover
 	if existing.Gameover.Valid && existing.Gameover.Bool {
-		return false, errors.New("game is already over")
+		return true, errors.New("game is already over")
 	}
 	// STEP 3: Update gameover to true
 	err = q.QuitGameSession(ctx, sessionID)
