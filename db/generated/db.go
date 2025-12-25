@@ -51,6 +51,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.updateSessionAfterGameoverStmt, err = db.PrepareContext(ctx, updateSessionAfterGameover); err != nil {
 		return nil, fmt.Errorf("error preparing query UpdateSessionAfterGameover: %w", err)
 	}
+	if q.updateSessionAfterQuitGameStmt, err = db.PrepareContext(ctx, updateSessionAfterQuitGame); err != nil {
+		return nil, fmt.Errorf("error preparing query UpdateSessionAfterQuitGame: %w", err)
+	}
 	if q.updateSessionStateStmt, err = db.PrepareContext(ctx, updateSessionState); err != nil {
 		return nil, fmt.Errorf("error preparing query UpdateSessionState: %w", err)
 	}
@@ -108,6 +111,11 @@ func (q *Queries) Close() error {
 	if q.updateSessionAfterGameoverStmt != nil {
 		if cerr := q.updateSessionAfterGameoverStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing updateSessionAfterGameoverStmt: %w", cerr)
+		}
+	}
+	if q.updateSessionAfterQuitGameStmt != nil {
+		if cerr := q.updateSessionAfterQuitGameStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing updateSessionAfterQuitGameStmt: %w", cerr)
 		}
 	}
 	if q.updateSessionStateStmt != nil {
@@ -173,6 +181,7 @@ type Queries struct {
 	getWalletByPlayerIdStmt             *sql.Stmt
 	updatePlayerNameStmt                *sql.Stmt
 	updateSessionAfterGameoverStmt      *sql.Stmt
+	updateSessionAfterQuitGameStmt      *sql.Stmt
 	updateSessionStateStmt              *sql.Stmt
 	updateWalletCoinsAndXpRewardStmt    *sql.Stmt
 	updateWalletXpRewardStmt            *sql.Stmt
@@ -191,6 +200,7 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		getWalletByPlayerIdStmt:             q.getWalletByPlayerIdStmt,
 		updatePlayerNameStmt:                q.updatePlayerNameStmt,
 		updateSessionAfterGameoverStmt:      q.updateSessionAfterGameoverStmt,
+		updateSessionAfterQuitGameStmt:      q.updateSessionAfterQuitGameStmt,
 		updateSessionStateStmt:              q.updateSessionStateStmt,
 		updateWalletCoinsAndXpRewardStmt:    q.updateWalletCoinsAndXpRewardStmt,
 		updateWalletXpRewardStmt:            q.updateWalletXpRewardStmt,

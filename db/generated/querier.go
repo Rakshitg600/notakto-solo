@@ -18,6 +18,7 @@ type Querier interface {
 	GetWalletByPlayerId(ctx context.Context, uid string) (Wallet, error)
 	UpdatePlayerName(ctx context.Context, arg UpdatePlayerNameParams) (Player, error)
 	UpdateSessionAfterGameover(ctx context.Context, arg UpdateSessionAfterGameoverParams) error
+	UpdateSessionAfterQuitGame(ctx context.Context, sessionID string) error
 	UpdateSessionState(ctx context.Context, arg UpdateSessionStateParams) error
 	UpdateWalletCoinsAndXpReward(ctx context.Context, arg UpdateWalletCoinsAndXpRewardParams) error
 	UpdateWalletXpReward(ctx context.Context, arg UpdateWalletXpRewardParams) error

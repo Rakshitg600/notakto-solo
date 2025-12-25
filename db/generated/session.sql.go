@@ -101,3 +101,15 @@ func (q *Queries) UpdateSessionAfterGameover(ctx context.Context, arg UpdateSess
 	_, err := q.exec(ctx, q.updateSessionAfterGameoverStmt, updateSessionAfterGameover, arg.SessionID, arg.Winner)
 	return err
 }
+
+const updateSessionAfterQuitGame = `-- name: UpdateSessionAfterQuitGame :exec
+UPDATE session
+SET gameover = true,
+    winner = false
+WHERE session_id = $1
+`
+
+func (q *Queries) UpdateSessionAfterQuitGame(ctx context.Context, sessionID string) error {
+	_, err := q.exec(ctx, q.updateSessionAfterQuitGameStmt, updateSessionAfterQuitGame, sessionID)
+	return err
+}

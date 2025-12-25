@@ -1,0 +1,39 @@
+package handlers
+
+import (
+	"log"
+	"net/http"
+
+	"github.com/labstack/echo/v4"
+
+	"github.com/rakshitg600/notakto-solo/functions"
+	"github.com/rakshitg600/notakto-solo/types"
+)
+
+func (h *Handler) QuitGameHandler(c echo.Context) error {
+	// ✅ Get UID
+	uid, ok := c.Get("uid").(string)
+	if !ok || uid == "" {
+		return echo.NewHTTPError(http.StatusUnauthorized, "unauthorized: missing or invalid uid")
+	}
+	idToken, ok := c.Get("idToken").(string)
+	if !ok || uid == "" {
+		return echo.NewHTTPError(http.StatusUnauthorized, "unauthorized: missing or invalid token")
+	}
+	log.Printf("SignInHandler called for uid: %s", uid)
+	profile_pic, name, email, new, err := functions.EnsureLogin(c.Request().Context(), h.Queries, uid, idToken)
+	if err != nil {
+		c.Logger().Errorf("EnsurePlayer failed: %v", err)
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
+
+	resp := types.SignInResponse{
+		Uid:        uid,
+		Name:       name,
+		Email:      email,
+		ProfilePic: profile_pic,
+		NewAccount: new,
+	}
+	log.Printf("User signed in: %s (new account: %v), name: %s, email %s, profilePic: %s", uid, new, name, email, profile_pic)
+	return c.JSON(http.StatusOK, resp)
+}
