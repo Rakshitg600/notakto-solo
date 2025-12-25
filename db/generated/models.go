@@ -27,9 +27,8 @@ type Session struct {
 }
 
 type Sessionstate struct {
-	SessionID     string        `json:"session_id"`
-	CurrentPlayer sql.NullInt32 `json:"current_player"`
-	Boards        []int32       `json:"boards"`
+	SessionID string  `json:"session_id"`
+	Boards    []int32 `json:"boards"`
 }
 
 type Wallet struct {

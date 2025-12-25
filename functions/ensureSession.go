@@ -26,41 +26,43 @@ func EnsureSession(ctx context.Context, q *db.Queries, uid string, numberOfBoard
 	// STEP 1: Try existing session
 	existing, err := q.GetLatestSessionStateByPlayerId(ctx, uid)
 	if err == nil && existing.SessionID != "" {
-		sessionID = existing.SessionID
-		uidOut = existing.Uid
-		boards = existing.Boards
-		if existing.Winner.Valid {
-			winner = existing.Winner.Bool
-		} else {
-			winner = false
+		isGameOver := existing.Gameover.Valid && existing.Gameover.Bool
+		if !isGameOver {
+			sessionID = existing.SessionID
+			uidOut = existing.Uid
+			boards = existing.Boards
+			if existing.Winner.Valid {
+				winner = existing.Winner.Bool
+			} else {
+				winner = false
+			}
+			if existing.BoardSize.Valid {
+				boardSizeOut = existing.BoardSize.Int32
+			} else {
+				boardSizeOut = 0
+			}
+			if existing.NumberOfBoards.Valid {
+				numberOfBoardsOut = existing.NumberOfBoards.Int32
+			} else {
+				numberOfBoardsOut = 0
+			}
+			if existing.Difficulty.Valid {
+				difficultyOut = existing.Difficulty.Int32
+			} else {
+				difficultyOut = 0
+			}
+			if existing.Gameover.Valid {
+				gameover = existing.Gameover.Bool
+			} else {
+				gameover = false
+			}
+			if existing.CreatedAt.Valid {
+				createdAt = existing.CreatedAt.Time
+			} else {
+				createdAt = time.Time{}
+			}
+			return sessionID, uidOut, boards, winner, boardSizeOut, numberOfBoardsOut, difficultyOut, gameover, createdAt, nil
 		}
-		if existing.BoardSize.Valid {
-			boardSizeOut = existing.BoardSize.Int32
-		} else {
-			boardSizeOut = 0
-		}
-		if existing.NumberOfBoards.Valid {
-			numberOfBoardsOut = existing.NumberOfBoards.Int32
-		} else {
-			numberOfBoardsOut = 0
-		}
-		if existing.Difficulty.Valid {
-			difficultyOut = existing.Difficulty.Int32
-		} else {
-			difficultyOut = 0
-		}
-		if existing.Gameover.Valid {
-			gameover = existing.Gameover.Bool
-		} else {
-			gameover = false
-		}
-		if existing.CreatedAt.Valid {
-			createdAt = existing.CreatedAt.Time
-		} else {
-			createdAt = time.Time{}
-		}
-
-		return sessionID, uidOut, boards, winner, boardSizeOut, numberOfBoardsOut, difficultyOut, gameover, createdAt, nil
 	}
 
 	// STEP 2: Create a new session

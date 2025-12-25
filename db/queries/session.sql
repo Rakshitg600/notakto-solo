@@ -26,3 +26,15 @@ UPDATE session
 SET gameover = true,
     winner = $2
 WHERE session_id = $1;
+
+-- name: UpdateSessionAfterQuitGame :exec
+UPDATE session
+SET gameover = true,
+    winner = false
+WHERE session_id = $1;
+
+-- name: QuitGameSession :exec
+UPDATE session
+SET gameover = true,
+    winner = false
+WHERE session_id = $1;

@@ -45,11 +45,17 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.getWalletByPlayerIdStmt, err = db.PrepareContext(ctx, getWalletByPlayerId); err != nil {
 		return nil, fmt.Errorf("error preparing query GetWalletByPlayerId: %w", err)
 	}
+	if q.quitGameSessionStmt, err = db.PrepareContext(ctx, quitGameSession); err != nil {
+		return nil, fmt.Errorf("error preparing query QuitGameSession: %w", err)
+	}
 	if q.updatePlayerNameStmt, err = db.PrepareContext(ctx, updatePlayerName); err != nil {
 		return nil, fmt.Errorf("error preparing query UpdatePlayerName: %w", err)
 	}
 	if q.updateSessionAfterGameoverStmt, err = db.PrepareContext(ctx, updateSessionAfterGameover); err != nil {
 		return nil, fmt.Errorf("error preparing query UpdateSessionAfterGameover: %w", err)
+	}
+	if q.updateSessionAfterQuitGameStmt, err = db.PrepareContext(ctx, updateSessionAfterQuitGame); err != nil {
+		return nil, fmt.Errorf("error preparing query UpdateSessionAfterQuitGame: %w", err)
 	}
 	if q.updateSessionStateStmt, err = db.PrepareContext(ctx, updateSessionState); err != nil {
 		return nil, fmt.Errorf("error preparing query UpdateSessionState: %w", err)
@@ -100,6 +106,11 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing getWalletByPlayerIdStmt: %w", cerr)
 		}
 	}
+	if q.quitGameSessionStmt != nil {
+		if cerr := q.quitGameSessionStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing quitGameSessionStmt: %w", cerr)
+		}
+	}
 	if q.updatePlayerNameStmt != nil {
 		if cerr := q.updatePlayerNameStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing updatePlayerNameStmt: %w", cerr)
@@ -108,6 +119,11 @@ func (q *Queries) Close() error {
 	if q.updateSessionAfterGameoverStmt != nil {
 		if cerr := q.updateSessionAfterGameoverStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing updateSessionAfterGameoverStmt: %w", cerr)
+		}
+	}
+	if q.updateSessionAfterQuitGameStmt != nil {
+		if cerr := q.updateSessionAfterQuitGameStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing updateSessionAfterQuitGameStmt: %w", cerr)
 		}
 	}
 	if q.updateSessionStateStmt != nil {
@@ -171,8 +187,10 @@ type Queries struct {
 	getLatestSessionStateByPlayerIdStmt *sql.Stmt
 	getPlayerByIdStmt                   *sql.Stmt
 	getWalletByPlayerIdStmt             *sql.Stmt
+	quitGameSessionStmt                 *sql.Stmt
 	updatePlayerNameStmt                *sql.Stmt
 	updateSessionAfterGameoverStmt      *sql.Stmt
+	updateSessionAfterQuitGameStmt      *sql.Stmt
 	updateSessionStateStmt              *sql.Stmt
 	updateWalletCoinsAndXpRewardStmt    *sql.Stmt
 	updateWalletXpRewardStmt            *sql.Stmt
@@ -189,8 +207,10 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		getLatestSessionStateByPlayerIdStmt: q.getLatestSessionStateByPlayerIdStmt,
 		getPlayerByIdStmt:                   q.getPlayerByIdStmt,
 		getWalletByPlayerIdStmt:             q.getWalletByPlayerIdStmt,
+		quitGameSessionStmt:                 q.quitGameSessionStmt,
 		updatePlayerNameStmt:                q.updatePlayerNameStmt,
 		updateSessionAfterGameoverStmt:      q.updateSessionAfterGameoverStmt,
+		updateSessionAfterQuitGameStmt:      q.updateSessionAfterQuitGameStmt,
 		updateSessionStateStmt:              q.updateSessionStateStmt,
 		updateWalletCoinsAndXpRewardStmt:    q.updateWalletCoinsAndXpRewardStmt,
 		updateWalletXpRewardStmt:            q.updateWalletXpRewardStmt,

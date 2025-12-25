@@ -46,3 +46,10 @@ type MakeMoveResponse struct {
 	CoinsRewarded int32   `json:"coinsRewarded"`
 	XpRewarded    int32   `json:"xpRewarded"`
 }
+type QuitGameRequest struct {
+	SessionID string `json:"sessionId"`
+}
+type QuitGameResponse struct {
+	Success bool   `json:"success"`
+	Error   string `json:"error,omitempty"`
+}
