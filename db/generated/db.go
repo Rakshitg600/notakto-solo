@@ -45,6 +45,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.getWalletByPlayerIdStmt, err = db.PrepareContext(ctx, getWalletByPlayerId); err != nil {
 		return nil, fmt.Errorf("error preparing query GetWalletByPlayerId: %w", err)
 	}
+	if q.quitGameSessionStmt, err = db.PrepareContext(ctx, quitGameSession); err != nil {
+		return nil, fmt.Errorf("error preparing query QuitGameSession: %w", err)
+	}
 	if q.updatePlayerNameStmt, err = db.PrepareContext(ctx, updatePlayerName); err != nil {
 		return nil, fmt.Errorf("error preparing query UpdatePlayerName: %w", err)
 	}
@@ -101,6 +104,11 @@ func (q *Queries) Close() error {
 	if q.getWalletByPlayerIdStmt != nil {
 		if cerr := q.getWalletByPlayerIdStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing getWalletByPlayerIdStmt: %w", cerr)
+		}
+	}
+	if q.quitGameSessionStmt != nil {
+		if cerr := q.quitGameSessionStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing quitGameSessionStmt: %w", cerr)
 		}
 	}
 	if q.updatePlayerNameStmt != nil {
@@ -179,6 +187,7 @@ type Queries struct {
 	getLatestSessionStateByPlayerIdStmt *sql.Stmt
 	getPlayerByIdStmt                   *sql.Stmt
 	getWalletByPlayerIdStmt             *sql.Stmt
+	quitGameSessionStmt                 *sql.Stmt
 	updatePlayerNameStmt                *sql.Stmt
 	updateSessionAfterGameoverStmt      *sql.Stmt
 	updateSessionAfterQuitGameStmt      *sql.Stmt
@@ -198,6 +207,7 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		getLatestSessionStateByPlayerIdStmt: q.getLatestSessionStateByPlayerIdStmt,
 		getPlayerByIdStmt:                   q.getPlayerByIdStmt,
 		getWalletByPlayerIdStmt:             q.getWalletByPlayerIdStmt,
+		quitGameSessionStmt:                 q.quitGameSessionStmt,
 		updatePlayerNameStmt:                q.updatePlayerNameStmt,
 		updateSessionAfterGameoverStmt:      q.updateSessionAfterGameoverStmt,
 		updateSessionAfterQuitGameStmt:      q.updateSessionAfterQuitGameStmt,

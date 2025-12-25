@@ -85,6 +85,18 @@ func (q *Queries) GetLatestSessionStateByPlayerId(ctx context.Context, uid strin
 	return i, err
 }
 
+const quitGameSession = `-- name: QuitGameSession :exec
+UPDATE session
+SET gameover = true,
+    winner = false
+WHERE session_id = $1
+`
+
+func (q *Queries) QuitGameSession(ctx context.Context, sessionID string) error {
+	_, err := q.exec(ctx, q.quitGameSessionStmt, quitGameSession, sessionID)
+	return err
+}
+
 const updateSessionAfterGameover = `-- name: UpdateSessionAfterGameover :exec
 UPDATE session
 SET gameover = true,

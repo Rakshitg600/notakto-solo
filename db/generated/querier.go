@@ -16,6 +16,7 @@ type Querier interface {
 	GetLatestSessionStateByPlayerId(ctx context.Context, uid string) (GetLatestSessionStateByPlayerIdRow, error)
 	GetPlayerById(ctx context.Context, uid string) (Player, error)
 	GetWalletByPlayerId(ctx context.Context, uid string) (Wallet, error)
+	QuitGameSession(ctx context.Context, sessionID string) error
 	UpdatePlayerName(ctx context.Context, arg UpdatePlayerNameParams) (Player, error)
 	UpdateSessionAfterGameover(ctx context.Context, arg UpdateSessionAfterGameoverParams) error
 	UpdateSessionAfterQuitGame(ctx context.Context, sessionID string) error

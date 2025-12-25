@@ -11,29 +11,28 @@ import (
 )
 
 func (h *Handler) QuitGameHandler(c echo.Context) error {
-	// ✅ Get UID
 	uid, ok := c.Get("uid").(string)
 	if !ok || uid == "" {
 		return echo.NewHTTPError(http.StatusUnauthorized, "unauthorized: missing or invalid uid")
 	}
-	idToken, ok := c.Get("idToken").(string)
-	if !ok || uid == "" {
-		return echo.NewHTTPError(http.StatusUnauthorized, "unauthorized: missing or invalid token")
+	log.Printf("QuitGameHandler called for uid: %s", uid)
+	// ✅ Try binding the body
+	var req types.QuitGameRequest
+	if err := c.Bind(&req); err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "invalid request body")
 	}
-	log.Printf("SignInHandler called for uid: %s", uid)
-	profile_pic, name, email, new, err := functions.EnsureLogin(c.Request().Context(), h.Queries, uid, idToken)
+	success, err := functions.EnsureQuitGame(c.Request().Context(), h.Queries, uid, req.SessionID)
 	if err != nil {
-		c.Logger().Errorf("EnsurePlayer failed: %v", err)
-		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		c.Logger().Errorf("EnsureQuitGame failed: %v", err)
+		return c.JSON(http.StatusOK, types.QuitGameResponse{
+			Success: false,
+			Error:   err.Error(),
+		})
 	}
 
-	resp := types.SignInResponse{
-		Uid:        uid,
-		Name:       name,
-		Email:      email,
-		ProfilePic: profile_pic,
-		NewAccount: new,
+	resp := types.QuitGameResponse{
+		Success: success,
 	}
-	log.Printf("User signed in: %s (new account: %v), name: %s, email %s, profilePic: %s", uid, new, name, email, profile_pic)
+	log.Printf("QuitGameHandler completed for uid: %s, success: %v", uid, success)
 	return c.JSON(http.StatusOK, resp)
 }
