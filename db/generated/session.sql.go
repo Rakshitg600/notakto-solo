@@ -26,7 +26,7 @@ type CreateSessionParams struct {
 }
 
 func (q *Queries) CreateSession(ctx context.Context, arg CreateSessionParams) error {
-	_, err := q.exec(ctx, q.createSessionStmt, createSession,
+	_, err := q.db.ExecContext(ctx, createSession,
 		arg.SessionID,
 		arg.Uid,
 		arg.BoardSize,
@@ -69,7 +69,7 @@ type GetLatestSessionStateByPlayerIdRow struct {
 }
 
 func (q *Queries) GetLatestSessionStateByPlayerId(ctx context.Context, uid string) (GetLatestSessionStateByPlayerIdRow, error) {
-	row := q.queryRow(ctx, q.getLatestSessionStateByPlayerIdStmt, getLatestSessionStateByPlayerId, uid)
+	row := q.db.QueryRowContext(ctx, getLatestSessionStateByPlayerId, uid)
 	var i GetLatestSessionStateByPlayerIdRow
 	err := row.Scan(
 		&i.SessionID,
@@ -93,7 +93,7 @@ WHERE session_id = $1
 `
 
 func (q *Queries) QuitGameSession(ctx context.Context, sessionID string) error {
-	_, err := q.exec(ctx, q.quitGameSessionStmt, quitGameSession, sessionID)
+	_, err := q.db.ExecContext(ctx, quitGameSession, sessionID)
 	return err
 }
 
@@ -110,7 +110,7 @@ type UpdateSessionAfterGameoverParams struct {
 }
 
 func (q *Queries) UpdateSessionAfterGameover(ctx context.Context, arg UpdateSessionAfterGameoverParams) error {
-	_, err := q.exec(ctx, q.updateSessionAfterGameoverStmt, updateSessionAfterGameover, arg.SessionID, arg.Winner)
+	_, err := q.db.ExecContext(ctx, updateSessionAfterGameover, arg.SessionID, arg.Winner)
 	return err
 }
 
@@ -122,6 +122,6 @@ WHERE session_id = $1
 `
 
 func (q *Queries) UpdateSessionAfterQuitGame(ctx context.Context, sessionID string) error {
-	_, err := q.exec(ctx, q.updateSessionAfterQuitGameStmt, updateSessionAfterQuitGame, sessionID)
+	_, err := q.db.ExecContext(ctx, updateSessionAfterQuitGame, sessionID)
 	return err
 }
