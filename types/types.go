@@ -53,3 +53,9 @@ type QuitGameResponse struct {
 	Success bool   `json:"success"`
 	Error   string `json:"error,omitempty"`
 }
+type GetWalletResponse struct {
+	Coins   int32  `json:"coins"`
+	XP      int32  `json:"xp"`
+	Success bool   `json:"success"`
+	Error   string `json:"error,omitempty"`
+}

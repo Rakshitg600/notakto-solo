@@ -22,7 +22,7 @@ type CreateInitialSessionStateParams struct {
 }
 
 func (q *Queries) CreateInitialSessionState(ctx context.Context, arg CreateInitialSessionStateParams) error {
-	_, err := q.exec(ctx, q.createInitialSessionStateStmt, createInitialSessionState, arg.SessionID, pq.Array(arg.Boards))
+	_, err := q.db.ExecContext(ctx, createInitialSessionState, arg.SessionID, pq.Array(arg.Boards))
 	return err
 }
 
@@ -38,6 +38,6 @@ type UpdateSessionStateParams struct {
 }
 
 func (q *Queries) UpdateSessionState(ctx context.Context, arg UpdateSessionStateParams) error {
-	_, err := q.exec(ctx, q.updateSessionStateStmt, updateSessionState, arg.SessionID, pq.Array(arg.Boards))
+	_, err := q.db.ExecContext(ctx, updateSessionState, arg.SessionID, pq.Array(arg.Boards))
 	return err
 }

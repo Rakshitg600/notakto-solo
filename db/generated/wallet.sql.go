@@ -22,7 +22,7 @@ type CreateWalletParams struct {
 }
 
 func (q *Queries) CreateWallet(ctx context.Context, arg CreateWalletParams) error {
-	_, err := q.exec(ctx, q.createWalletStmt, createWallet, arg.Uid, arg.Coins, arg.Xp)
+	_, err := q.db.ExecContext(ctx, createWallet, arg.Uid, arg.Coins, arg.Xp)
 	return err
 }
 
@@ -36,7 +36,7 @@ WHERE uid = $1
 `
 
 func (q *Queries) GetWalletByPlayerId(ctx context.Context, uid string) (Wallet, error) {
-	row := q.queryRow(ctx, q.getWalletByPlayerIdStmt, getWalletByPlayerId, uid)
+	row := q.db.QueryRowContext(ctx, getWalletByPlayerId, uid)
 	var i Wallet
 	err := row.Scan(&i.Uid, &i.Coins, &i.Xp)
 	return i, err
@@ -56,7 +56,7 @@ type UpdateWalletCoinsAndXpRewardParams struct {
 }
 
 func (q *Queries) UpdateWalletCoinsAndXpReward(ctx context.Context, arg UpdateWalletCoinsAndXpRewardParams) error {
-	_, err := q.exec(ctx, q.updateWalletCoinsAndXpRewardStmt, updateWalletCoinsAndXpReward, arg.Uid, arg.Coins, arg.Xp)
+	_, err := q.db.ExecContext(ctx, updateWalletCoinsAndXpReward, arg.Uid, arg.Coins, arg.Xp)
 	return err
 }
 
@@ -72,6 +72,6 @@ type UpdateWalletXpRewardParams struct {
 }
 
 func (q *Queries) UpdateWalletXpReward(ctx context.Context, arg UpdateWalletXpRewardParams) error {
-	_, err := q.exec(ctx, q.updateWalletXpRewardStmt, updateWalletXpReward, arg.Uid, arg.Xp)
+	_, err := q.db.ExecContext(ctx, updateWalletXpReward, arg.Uid, arg.Xp)
 	return err
 }

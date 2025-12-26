@@ -23,7 +23,7 @@ type CreatePlayerParams struct {
 }
 
 func (q *Queries) CreatePlayer(ctx context.Context, arg CreatePlayerParams) error {
-	_, err := q.exec(ctx, q.createPlayerStmt, createPlayer,
+	_, err := q.db.ExecContext(ctx, createPlayer,
 		arg.Uid,
 		arg.Email,
 		arg.Name,
@@ -37,7 +37,7 @@ SELECT uid, name, email, profile_pic FROM Player WHERE uid = $1
 `
 
 func (q *Queries) GetPlayerById(ctx context.Context, uid string) (Player, error) {
-	row := q.queryRow(ctx, q.getPlayerByIdStmt, getPlayerById, uid)
+	row := q.db.QueryRowContext(ctx, getPlayerById, uid)
 	var i Player
 	err := row.Scan(
 		&i.Uid,
@@ -58,7 +58,7 @@ type UpdatePlayerNameParams struct {
 }
 
 func (q *Queries) UpdatePlayerName(ctx context.Context, arg UpdatePlayerNameParams) (Player, error) {
-	row := q.queryRow(ctx, q.updatePlayerNameStmt, updatePlayerName, arg.Uid, arg.Name)
+	row := q.db.QueryRowContext(ctx, updatePlayerName, arg.Uid, arg.Name)
 	var i Player
 	err := row.Scan(
 		&i.Uid,
