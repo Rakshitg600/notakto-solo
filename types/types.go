@@ -59,3 +59,13 @@ type GetWalletResponse struct {
 	Success bool   `json:"success"`
 	Error   string `json:"error,omitempty"`
 }
+type SkipMoveRequest struct {
+	SessionID string `json:"sessionId"`
+}
+type SkipMoveResponse struct {
+	Boards        []int32 `json:"boards"`
+	Gameover      bool    `json:"gameover"`
+	Winner        bool    `json:"winner"`
+	CoinsRewarded int32   `json:"coinsRewarded"`
+	XpRewarded    int32   `json:"xpRewarded"`
+}

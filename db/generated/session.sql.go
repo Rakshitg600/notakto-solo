@@ -51,7 +51,6 @@ FROM session s
 JOIN sessionstate ss
     ON s.session_id = ss.session_id
 WHERE s.uid = $1
-    AND s.created_at >= now() - interval '15 minutes'
 ORDER BY s.created_at DESC
 LIMIT 1
 `
