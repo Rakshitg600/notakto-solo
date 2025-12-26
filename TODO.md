@@ -15,7 +15,8 @@
 15. Explore if we could migrate to protobuf []
 16. Transactions implementation []
 17. Architecture fix to decide how to share state between services especially Wallet table []
-18. Improve error handling 
-19. DB transactions in APIs
-20. only one api call at a time for a user
-21. remove and change logging
+18. Improve error handling []
+19. DB transactions in APIs []
+20. only one api call at a time for a user (per uid serialisation) []
+21. remove and change logging []
+22. migrate from lib/pq to pgx []
