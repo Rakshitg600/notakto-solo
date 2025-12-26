@@ -14,4 +14,5 @@ func RegisterRoutes(e *echo.Echo, h *handlers.Handler) {
 	e.GET("/v1/health-get", h.HealthGetHandler)
 	e.POST("/v1/make-move", h.MakeMoveHandler, middleware.FirebaseAuthMiddleware)
 	e.POST("/v1/quit-game", h.QuitGameHandler, middleware.FirebaseAuthMiddleware)
+	e.GET("/v1/get-wallet", h.GetWalletHandler, middleware.FirebaseAuthMiddleware)
 }
