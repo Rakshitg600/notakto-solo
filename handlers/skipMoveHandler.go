@@ -30,7 +30,7 @@ func (h *Handler) SkipMoveHandler(c echo.Context) error {
 	)
 	if err != nil {
 		c.Logger().Errorf("SkipMove failed: %v", err)
-		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		return echo.NewHTTPError(http.StatusInternalServerError, "failed to process skip move")
 	}
 
 	resp := types.SkipMoveResponse{
