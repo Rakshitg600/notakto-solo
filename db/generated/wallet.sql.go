@@ -60,19 +60,19 @@ func (q *Queries) UpdateWalletCoinsAndXpReward(ctx context.Context, arg UpdateWa
 	return err
 }
 
-const updateWalletReduceCoins = `-- name: UpdateWalletReduceCoins :exec
+const updateWalletSkipMove = `-- name: UpdateWalletSkipMove :exec
 UPDATE wallet
 SET coins = coins-$2
 WHERE uid = $1
 `
 
-type UpdateWalletReduceCoinsParams struct {
+type UpdateWalletSkipMoveParams struct {
 	Uid   string        `json:"uid"`
 	Coins sql.NullInt32 `json:"coins"`
 }
 
-func (q *Queries) UpdateWalletReduceCoins(ctx context.Context, arg UpdateWalletReduceCoinsParams) error {
-	_, err := q.db.ExecContext(ctx, updateWalletReduceCoins, arg.Uid, arg.Coins)
+func (q *Queries) UpdateWalletSkipMove(ctx context.Context, arg UpdateWalletSkipMoveParams) error {
+	_, err := q.db.ExecContext(ctx, updateWalletSkipMove, arg.Uid, arg.Coins)
 	return err
 }
 
