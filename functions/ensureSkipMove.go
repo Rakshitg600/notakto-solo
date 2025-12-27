@@ -52,7 +52,7 @@ func EnsureSkipMove(ctx context.Context, q *db.Queries, uid string, sessionID st
 
 	// STEP 5: Deduct coins
 	const skipMoveCost = 200
-	err = q.UpdateWalletSkipMove(ctx, db.UpdateWalletSkipMoveParams{
+	err = q.UpdateWalletReduceCoins(ctx, db.UpdateWalletReduceCoinsParams{
 		Uid:   uid,
 		Coins: sql.NullInt32{Int32: skipMoveCost, Valid: true},
 	})
@@ -66,6 +66,8 @@ func EnsureSkipMove(ctx context.Context, q *db.Queries, uid string, sessionID st
 		// No valid moves for AI - this shouldn't happen if game is not over
 		return existing.Boards, false, false, 0, 0, errors.New("AI could not find a valid move")
 	}
+
+	existing.Boards = append(existing.Boards, -1) // Placeholder for player's skipped move
 	existing.Boards = append(existing.Boards, aiMoveIndex)
 	// Check for gameover after AI move
 	existing.Gameover = sql.NullBool{Bool: true, Valid: true}
