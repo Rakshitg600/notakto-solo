@@ -22,6 +22,9 @@ var firebaseHTTPClient = &http.Client{
 	Timeout: 5 * time.Second,
 }
 
+// VerifyFirebaseToken validates a Firebase ID token and looks up the associated user account.
+// On success it returns the user's LocalID, display name, email, and photo URL.
+// On failure it returns empty strings and a non-nil error describing the problem.
 func VerifyFirebaseToken(ctx context.Context, idToken string) (string, string, string, string, error) {
 	url := fmt.Sprintf(
 		"https://identitytoolkit.googleapis.com/v1/accounts:lookup?key=%s",

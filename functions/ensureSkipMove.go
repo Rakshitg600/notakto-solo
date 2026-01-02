@@ -9,6 +9,15 @@ import (
 	db "github.com/rakshitg600/notakto-solo/db/generated"
 )
 
+// EnsureSkipMove validates the session and processes a player "skip" move by charging the wallet,
+// applying an AI move, updating session state, and awarding rewards if the game ends.
+//
+// EnsureSkipMove verifies that the provided sessionID matches the latest session for the user and
+// that the game is not already over. It requires the player to have at least 200 coins, deducts
+// that cost, computes and applies an AI move, updates the session state, and if the move ends the
+// game it marks the session as finished and credits coins and XP to the player's wallet.
+// Errors are returned for session mismatches or expirations, insufficient coins, failure to find an
+// AI move, and any database operation failures.
 func EnsureSkipMove(ctx context.Context, q *db.Queries, uid string, sessionID string) (
 	boards []int32,
 	gameOver bool,

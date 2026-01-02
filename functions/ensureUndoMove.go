@@ -9,6 +9,11 @@ import (
 	db "github.com/rakshitg600/notakto-solo/db/generated"
 )
 
+// EnsureUndoMove validates the session and wallet, charges the undo cost, removes the last two moves (player + AI) from the session boards, persists changes, and returns the updated boards.
+// 
+// It checks that the provided sessionID matches the latest session for uid, verifies the game is not over, ensures at least two moves exist, deducts 100 coins from the wallet, updates the session state in the database, and returns the new boards slice.
+// 
+// The function returns an error if the session is missing or expired, the game is already over, there are fewer than two moves to undo, the wallet has insufficient coins, or any database operation fails.
 func EnsureUndoMove(ctx context.Context, q *db.Queries, uid string, sessionID string) (
 	boards []int32,
 	err error,
