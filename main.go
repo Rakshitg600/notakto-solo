@@ -3,6 +3,10 @@ package main
 import (
 	"context"
 	"log"
+	"net/http"
+	"os"
+	"os/signal"
+	"syscall"
 	"time"
 
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -41,13 +45,13 @@ func main() {
 	poolConfig.MaxConnLifetime = 30 * time.Minute
 	poolConfig.MaxConnIdleTime = 5 * time.Minute
 	poolConfig.HealthCheckPeriod = 30 * time.Second
+
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 	pool, err := pgxpool.NewWithConfig(ctx, poolConfig)
 	if err != nil {
 		log.Fatal("failed to create pgx pool:", err)
 	}
-	defer pool.Close()
 
 	if err := pool.Ping(ctx); err != nil {
 		log.Fatal("failed to connect to database:", err)
@@ -57,8 +61,30 @@ func main() {
 	handler := handlers.NewHandler(queries)
 
 	routes.RegisterRoutes(e, handler)
-
 	port := config.MustGetEnv("PORT")
+	serverErr := make(chan error, 1)
+	go func() {
+		if err := e.Start(":" + port); err != nil && err != http.ErrServerClosed {
+			log.Println("server error:", err)
+			serverErr <- err
+		}
+	}()
 
-	log.Fatal(e.Start(":" + port))
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
+	select {
+	case <-quit:
+		log.Println("shutdown signal received")
+	case err := <-serverErr:
+		log.Println("server failed, initiating shutdown:", err)
+	}
+	shutdownCtx, shutdownCancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer shutdownCancel()
+
+	if err := e.Shutdown(shutdownCtx); err != nil {
+		log.Println("server shutdown failed:", err)
+	}
+	log.Println("closing database pool...")
+	pool.Close()
+	log.Println("server exited gracefully")
 }
