@@ -33,3 +33,7 @@
 33. signin handler uid 
 34. graceful shutdown
 35. one more layer between sqlc and functions: domain
+36. duplicate row error
+37. retry db/tx on fail 
+38. refactor store package with create, read, update and delete
+39. uid mismatch bug and read uid from context always and never as prop
