@@ -40,6 +40,10 @@ func EnsureUndoMove(ctx context.Context, pool *pgxpool.Pool, uid string, session
 	if existing.SessionID != sessionID {
 		return nil, errors.New("session expired or not found")
 	}
+	// Validate IsAiMove and Boards length alignment
+	if len(existing.IsAiMove) != len(existing.Boards) {
+		return nil, errors.New("session state corrupted: IsAiMove and Boards length mismatch")
+	}
 	// STEP 2: Validate gameover
 	if existing.Gameover.Valid && existing.Gameover.Bool {
 		return nil, errors.New("game is already over")
@@ -70,7 +74,7 @@ func EnsureUndoMove(ctx context.Context, pool *pgxpool.Pool, uid string, session
 		return nil, errors.New("insufficient coins to undo move")
 	}
 	// STEP 5: Verify there are moves to undo
-	if len(existing.Boards) < 2 {
+	if len(existing.Boards) < 1 {
 		return nil, errors.New("no moves to undo")
 	}
 
@@ -80,10 +84,25 @@ func EnsureUndoMove(ctx context.Context, pool *pgxpool.Pool, uid string, session
 		return nil, err
 	}
 
-	// STEP 7: Pop last two elements (player move + AI move)
-	existing.Boards = existing.Boards[:len(existing.Boards)-2]
-	// Update session state after AI move
-	err = store.UpdateSessionState(ctx, qtx, sessionID, existing.Boards)
+	// STEP 7: Determine how many moves to undo based on isAiMove
+	// If last move was AI and second-to-last was player: delete 2 (regular player+AI turn)
+	// If last move was AI and second-to-last was also AI (or doesn't exist): delete 1 (skip move case)
+	movesToDelete := 1
+	if len(existing.IsAiMove) >= 2 {
+		lastIsAi := existing.IsAiMove[len(existing.IsAiMove)-1]
+		secondLastIsAi := existing.IsAiMove[len(existing.IsAiMove)-2]
+		if lastIsAi && !secondLastIsAi {
+			// Regular turn: player move followed by AI move
+			movesToDelete = 2
+		}
+	}
+
+	// Pop moves from boards and isAiMove arrays
+	existing.Boards = existing.Boards[:len(existing.Boards)-movesToDelete]
+	existing.IsAiMove = existing.IsAiMove[:len(existing.IsAiMove)-movesToDelete]
+
+	// Update session state
+	err = store.UpdateSessionState(ctx, qtx, sessionID, existing.Boards, existing.IsAiMove)
 	if err != nil {
 		return nil, err
 	}

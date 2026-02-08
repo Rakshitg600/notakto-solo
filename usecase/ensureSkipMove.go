@@ -48,6 +48,10 @@ func EnsureSkipMove(ctx context.Context, pool *pgxpool.Pool, uid string, session
 	if existing.SessionID != sessionID {
 		return nil, false, false, 0, 0, errors.New("session expired or not found")
 	}
+	// Validate IsAiMove and Boards length alignment
+	if len(existing.IsAiMove) != len(existing.Boards) {
+		return nil, false, false, 0, 0, errors.New("session state corrupted: IsAiMove and Boards length mismatch")
+	}
 	// STEP 2: Validate gameover
 	if existing.Gameover.Valid && existing.Gameover.Bool {
 		return nil, true, existing.Winner.Bool, 0, 0, errors.New("game is already over")
@@ -91,8 +95,8 @@ func EnsureSkipMove(ctx context.Context, pool *pgxpool.Pool, uid string, session
 		return existing.Boards, false, false, 0, 0, errors.New("AI could not find a valid move")
 	}
 
-	existing.Boards = append(existing.Boards, -1) // Placeholder for player's skipped move
 	existing.Boards = append(existing.Boards, aiMoveIndex)
+	existing.IsAiMove = append(existing.IsAiMove, true) // AI move (skip move only adds AI move)
 	// Check for gameover after AI move
 	existing.Gameover = pgtype.Bool{Bool: true, Valid: true}
 	for i := int32(0); i < existing.NumberOfBoards.Int32; i++ {
@@ -107,7 +111,7 @@ func EnsureSkipMove(ctx context.Context, pool *pgxpool.Pool, uid string, session
 		existing.Winner = pgtype.Bool{Bool: false, Valid: false}
 	}
 	// Update session state after AI move
-	err = store.UpdateSessionState(ctx, qtx, sessionID, existing.Boards)
+	err = store.UpdateSessionState(ctx, qtx, sessionID, existing.Boards, existing.IsAiMove)
 	if err != nil {
 		return nil, existing.Gameover.Valid && existing.Gameover.Bool, existing.Winner.Valid && existing.Winner.Bool, 0, 0, err
 	}

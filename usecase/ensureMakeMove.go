@@ -23,7 +23,7 @@ import (
 // Returns:
 //   - boards: the session's boards after applying the player's move and any AI move.
 //   - gameOver: true if the game has ended after the applied moves, false otherwise.
-//   - winner: true if the AI is the winner, false otherwise (when meaningful).
+//   - winner: true if the player won, false if the AI won or if the game is not over.
 //   - coinsRewarded: coins awarded to the player as part of the game-over rewards, 0 if none or game not ended.
 //   - xpRewarded: XP awarded to the player as part of the game-over rewards, 0 if none or game not ended.
 //   - err: non-nil when validation, DB updates, or AI move resolution fail.
@@ -55,6 +55,10 @@ func EnsureMakeMove(ctx context.Context, pool *pgxpool.Pool, uid string, session
 	if existing.SessionID != sessionID {
 		return nil, false, false, 0, 0, errors.New("session expired or not found")
 	}
+	// Validate IsAiMove and Boards length alignment
+	if len(existing.IsAiMove) != len(existing.Boards) {
+		return nil, false, false, 0, 0, errors.New("session state corrupted: IsAiMove and Boards length mismatch")
+	}
 	// STEP 2: Validate gameover
 	if existing.Gameover.Valid && existing.Gameover.Bool {
 		return nil, true, existing.Winner.Bool, 0, 0, errors.New("game is already over")
@@ -81,7 +85,11 @@ func EnsureMakeMove(ctx context.Context, pool *pgxpool.Pool, uid string, session
 		}
 	}
 	// STEP 7: Make Move
+	if len(existing.IsAiMove) != len(existing.Boards) {
+		return nil, false, false, 0, 0, errors.New("session move history out of sync")
+	}
 	existing.Boards = append(existing.Boards, moveIndex)
+	existing.IsAiMove = append(existing.IsAiMove, false) // Player move
 	// STEP 8: Check for gameover
 	existing.Gameover = pgtype.Bool{Bool: true, Valid: true}
 	for i := int32(0); i < existing.NumberOfBoards.Int32; i++ {
@@ -97,7 +105,7 @@ func EnsureMakeMove(ctx context.Context, pool *pgxpool.Pool, uid string, session
 	}
 	// STEP 9: Update DB state || AI Makes move and Update DB state
 	// 9.1 Update session state in db
-	err = store.UpdateSessionState(ctx, qtx, sessionID, existing.Boards)
+	err = store.UpdateSessionState(ctx, qtx, sessionID, existing.Boards, existing.IsAiMove)
 	if err != nil {
 		return nil, existing.Gameover.Valid && existing.Gameover.Bool, existing.Winner.Valid && existing.Winner.Bool, 0, 0, err
 	}
@@ -126,6 +134,7 @@ func EnsureMakeMove(ctx context.Context, pool *pgxpool.Pool, uid string, session
 			return existing.Boards, false, false, 0, 0, errors.New("AI could not find a valid move")
 		}
 		existing.Boards = append(existing.Boards, aiMoveIndex)
+		existing.IsAiMove = append(existing.IsAiMove, true) // AI move
 		// Check for gameover after AI move
 		existing.Gameover = pgtype.Bool{Bool: true, Valid: true}
 		for i := int32(0); i < existing.NumberOfBoards.Int32; i++ {
@@ -140,7 +149,7 @@ func EnsureMakeMove(ctx context.Context, pool *pgxpool.Pool, uid string, session
 			existing.Winner = pgtype.Bool{Bool: false, Valid: false}
 		}
 		// Update session state after AI move
-		err = store.UpdateSessionState(ctx, qtx, sessionID, existing.Boards)
+		err = store.UpdateSessionState(ctx, qtx, sessionID, existing.Boards, existing.IsAiMove)
 		if err != nil {
 			return nil, existing.Gameover.Valid && existing.Gameover.Bool, existing.Winner.Valid && existing.Winner.Bool, 0, 0, err
 		}
