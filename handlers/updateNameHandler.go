@@ -4,6 +4,8 @@ import (
 	"log"
 
 	"github.com/labstack/echo/v4"
+
+	"github.com/rakshitg600/notakto-solo/contextkey"
 	"github.com/rakshitg600/notakto-solo/usecase"
 )
 
@@ -12,8 +14,7 @@ type UpdatePlayerNameRequest struct {
 }
 
 func (h *Handler) UpdateNameHandler(c echo.Context) error {
-	// ✅ Get UID
-	uid, ok := c.Get("uid").(string)
+	uid, ok := contextkey.UIDFromContext(c.Request().Context())
 	if !ok || uid == "" {
 		return echo.NewHTTPError(401, "unauthorized: missing or invalid uid")
 	}
@@ -27,9 +28,10 @@ func (h *Handler) UpdateNameHandler(c echo.Context) error {
 		return echo.NewHTTPError(400, "name is required")
 	}
 	// ✅ Update the name
-	updatedName, err := usecase.EnsureUpdateName(c.Request().Context(), h.Pool, req.Name, uid)
+	updatedName, err := usecase.EnsureUpdateName(c.Request().Context(), h.Pool, req.Name)
 	if err != nil {
-		return echo.NewHTTPError(500, err.Error())
+		log.Printf("UpdateNameHandler error for uid %s: %v", uid, err)
+		return echo.NewHTTPError(500, "internal server error")
 	}
 	// ✅ Return the updated name
 	log.Printf("Updated name for uid %s to %s", uid, updatedName)

@@ -6,6 +6,7 @@ import (
 
 	"github.com/labstack/echo/v4"
 
+	"github.com/rakshitg600/notakto-solo/contextkey"
 	"github.com/rakshitg600/notakto-solo/usecase"
 )
 
@@ -18,21 +19,15 @@ type SignInResponse struct {
 }
 
 func (h *Handler) SignInHandler(c echo.Context) error {
-	// ✅ Get UID
-	uid, ok := c.Get("uid").(string)
+	uid, ok := contextkey.UIDFromContext(c.Request().Context())
 	if !ok || uid == "" {
 		return echo.NewHTTPError(http.StatusUnauthorized, "unauthorized: missing or invalid uid")
-	}
-	idToken, ok := c.Get("idToken").(string)
-	if !ok || idToken == "" {
-		return echo.NewHTTPError(http.StatusUnauthorized, "unauthorized: missing or invalid token")
 	}
 	log.Printf("SignInHandler called for uid: %s", uid)
 	profilePic, name, email, isNew, err := usecase.EnsureLogin(
 		c.Request().Context(),
 		h.Pool,
-		uid,
-		idToken,
+		h.AuthClient,
 	)
 
 	if err != nil {
