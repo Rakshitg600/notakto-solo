@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"context"
 	"crypto/rand"
 	"encoding/hex"
 	"net/http"
@@ -45,6 +46,8 @@ func UIDLockMiddleware(rdb *redis.Client) echo.MiddlewareFunc {
 				return echo.NewHTTPError(http.StatusInternalServerError, "Failed to generate lock nonce")
 			}
 			lockVal := hex.EncodeToString(nonce)
+			ticker := time.NewTicker(lockRetryWait)
+			defer ticker.Stop()
 
 			// Retry acquiring the lock until the request context expires.
 			for {
@@ -59,12 +62,19 @@ func UIDLockMiddleware(rdb *redis.Client) echo.MiddlewareFunc {
 				select {
 				case <-ctx.Done():
 					return echo.NewHTTPError(http.StatusTooManyRequests, "Could not acquire lock, try again later")
-				case <-time.After(lockRetryWait):
+				case <-ticker.C:
 				}
 			}
 
 			// Ensure unlock runs after the handler, even on panic.
-			defer unlockScript.Run(ctx, rdb, []string{lockKey}, lockVal)
+			// Use context.Background() because the request ctx may be canceled.
+			defer func() {
+				unlockCtx, unlockCancel := context.WithTimeout(context.Background(), 2*time.Second)
+				defer unlockCancel()
+				if err := unlockScript.Run(unlockCtx, rdb, []string{lockKey}, lockVal).Err(); err != nil {
+					c.Logger().Errorf("uid-lock: failed to unlock %s: %v", lockKey, err)
+				}
+			}()
 
 			return next(c)
 		}
