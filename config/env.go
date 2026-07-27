@@ -19,11 +19,11 @@ var (
 	envStore sync.Map
 	envMode  EnvMode
 	initOnce sync.Once
+	initErr  error
 )
 
 // InitEnv loads env; call once at startup.
 func InitEnv() error {
-	var initErr error
 	initOnce.Do(func() {
 		// Load .env for local/dev and let it override stale shell exports.
 		// This keeps checked-in local config authoritative when both exist.
@@ -64,6 +64,11 @@ func InitEnv() error {
 		}
 
 		if err := loadResolved("NOWPAYMENTS_IPN_SECRET"); err != nil {
+			initErr = err
+			return
+		}
+
+		if err := load("KEEPALIVE_TOKEN"); err != nil {
 			initErr = err
 			return
 		}
