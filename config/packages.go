@@ -1,20 +1,20 @@
 package config
 
-import "slices"
+const CoinPackagesKey = "coin_packages"
 
 type CoinPackage struct {
-	ID             string
-	PackageName    string
-	Coins          int32
-	VisualCoins    int32
-	AmountCents    int32
-	Currency       string
-	DefaultPackage bool
+	PackageID      string `json:"packageId"`
+	PackageName    string `json:"packageName"`
+	Coins          int32  `json:"coins"`
+	VisualCoins    int32  `json:"visualCoins"`
+	AmountCents    int32  `json:"amountCents"`
+	Currency       string `json:"currency"`
+	DefaultPackage bool   `json:"defaultPackage"`
 }
 
-var coinPackages = []CoinPackage{
+var defaultCoinPackages = []CoinPackage{
 	{
-		ID:             "pkg_500",
+		PackageID:      "pkg_500",
 		PackageName:    "Starter Pack",
 		Coins:          500,
 		VisualCoins:    2,
@@ -23,7 +23,7 @@ var coinPackages = []CoinPackage{
 		DefaultPackage: false,
 	},
 	{
-		ID:             "pkg_1200",
+		PackageID:      "pkg_1200",
 		PackageName:    "Tactical Pack",
 		Coins:          1200,
 		VisualCoins:    3,
@@ -32,7 +32,7 @@ var coinPackages = []CoinPackage{
 		DefaultPackage: true,
 	},
 	{
-		ID:             "pkg_3000",
+		PackageID:      "pkg_3000",
 		PackageName:    "Champion Pack",
 		Coins:          3000,
 		VisualCoins:    4,
@@ -42,19 +42,15 @@ var coinPackages = []CoinPackage{
 	},
 }
 
-var coinPackagesByID = func() map[string]CoinPackage {
-	packages := make(map[string]CoinPackage, len(coinPackages))
-	for _, pkg := range coinPackages {
-		packages[pkg.ID] = pkg
-	}
-	return packages
-}()
-
-func ListCoinPackages() []CoinPackage {
-	return slices.Clone(coinPackages)
+func DefaultCoinPackages() []CoinPackage {
+	return defaultCoinPackages
 }
 
-func CoinPackageByID(packageID string) (CoinPackage, bool) {
-	pkg, ok := coinPackagesByID[packageID]
-	return pkg, ok
+func CoinPackageByID(packages []CoinPackage, packageID string) (CoinPackage, bool) {
+	for _, pkg := range packages {
+		if pkg.PackageID == packageID {
+			return pkg, true
+		}
+	}
+	return CoinPackage{}, false
 }
