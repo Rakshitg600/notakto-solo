@@ -40,7 +40,7 @@
 40. replace -1 as placeholder for skip move with something good - [x]
 41. censor bloom filter for default and update username - [x]
 42. http status code from ensure layer to handler layer - [ ]
-43. log defer txn fail - [ ]
+43. log defer txn fail - [x]
 44. bloom filter for default and update username - [ ]
 45. trace id and its request context and monitoring - [ ]
 46. created at and updated at in all tables - [ ]
