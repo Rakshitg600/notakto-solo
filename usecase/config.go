@@ -42,3 +42,19 @@ func loadSignUpConfig(ctx context.Context, q *db.Queries) (config.SignUpConfig, 
 	}
 	return signUp, nil
 }
+
+func loadCensorUsernameConfig(ctx context.Context, q *db.Queries) ([]string, error) {
+	value, err := store.GetConfigValueByKey(ctx, q, config.CensorUsernameKey)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return config.DefaultCensorWords(), nil
+		}
+		return nil, fmt.Errorf("get %q config: %w", config.CensorUsernameKey, err)
+	}
+
+	badWords := make([]string, 0)
+	if err := json.Unmarshal(value, &badWords); err != nil {
+		return nil, fmt.Errorf("decode %s config: %w", config.CensorUsernameKey, err)
+	}
+	return badWords, nil
+}

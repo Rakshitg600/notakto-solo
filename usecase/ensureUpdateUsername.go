@@ -31,6 +31,14 @@ func EnsureUpdateUsername(ctx context.Context, pool *pgxpool.Pool, username stri
 	}
 
 	queries := db.New(pool)
+	badWords, err := loadCensorUsernameConfig(ctx, queries)
+	if err != nil {
+		return "", http.StatusInternalServerError, err
+	}
+
+	if err := logic.ValidateCensorship(trimmed, badWords); err != nil {
+		return "", http.StatusBadRequest, err
+	}
 	tx, err := pool.BeginTx(ctx, pgx.TxOptions{
 		IsoLevel:   pgx.Serializable,
 		AccessMode: pgx.ReadWrite,
