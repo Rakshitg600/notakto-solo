@@ -7,11 +7,11 @@ import (
 	"time"
 
 	"github.com/jackc/pgx/v5/pgtype"
-	db "github.com/rakshitg600/notakto-solo/db/generated"
 	"github.com/rakshitg600/notakto-solo/contextkey"
+	db "github.com/rakshitg600/notakto-solo/db/generated"
 )
 
-func CreatePlayer(ctx context.Context, q *db.Queries, name string, email string, profilePic string) (err error) {
+func CreatePlayer(ctx context.Context, q *db.Queries, name string, email string, profilePic string, username string) (err error) {
 	uid, ok := contextkey.UIDFromContext(ctx)
 	if !ok || uid == "" {
 		return errors.New("missing or invalid uid in context")
@@ -25,6 +25,7 @@ func CreatePlayer(ctx context.Context, q *db.Queries, name string, email string,
 			String: profilePic,
 			Valid:  profilePic != "",
 		},
+		Username: username,
 	})
 	if time.Since(start) > 2*time.Second {
 		//logging slow DB calls
