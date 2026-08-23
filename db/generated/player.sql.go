@@ -11,6 +11,22 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+const checkUsernameExists = `-- name: CheckUsernameExists :one
+SELECT EXISTS(SELECT 1 FROM Player WHERE username = $1 AND uid != $2) AS exists
+`
+
+type CheckUsernameExistsParams struct {
+	Username string `json:"username"`
+	Uid      string `json:"uid"`
+}
+
+func (q *Queries) CheckUsernameExists(ctx context.Context, arg CheckUsernameExistsParams) (bool, error) {
+	row := q.db.QueryRow(ctx, checkUsernameExists, arg.Username, arg.Uid)
+	var exists bool
+	err := row.Scan(&exists)
+	return exists, err
+}
+
 const createPlayer = `-- name: CreatePlayer :exec
 INSERT INTO Player (uid, email, name, profile_pic, username)
 VALUES ($1, $2, $3, $4, $5)
@@ -63,6 +79,28 @@ type UpdatePlayerNameParams struct {
 
 func (q *Queries) UpdatePlayerName(ctx context.Context, arg UpdatePlayerNameParams) (Player, error) {
 	row := q.db.QueryRow(ctx, updatePlayerName, arg.Uid, arg.Name)
+	var i Player
+	err := row.Scan(
+		&i.Uid,
+		&i.Name,
+		&i.Email,
+		&i.ProfilePic,
+		&i.Username,
+	)
+	return i, err
+}
+
+const updatePlayerUsername = `-- name: UpdatePlayerUsername :one
+UPDATE Player SET username = $2 WHERE uid = $1 RETURNING uid, name, email, profile_pic, username
+`
+
+type UpdatePlayerUsernameParams struct {
+	Uid      string `json:"uid"`
+	Username string `json:"username"`
+}
+
+func (q *Queries) UpdatePlayerUsername(ctx context.Context, arg UpdatePlayerUsernameParams) (Player, error) {
+	row := q.db.QueryRow(ctx, updatePlayerUsername, arg.Uid, arg.Username)
 	var i Player
 	err := row.Scan(
 		&i.Uid,
