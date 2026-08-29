@@ -23,3 +23,5 @@
 23. job to send usernames to AI for censorship - [ ]
 24. default username email suffix - [ ]
 25. job to recreate bloom filters - [ ]
+26. make clients available without passing in params like db client, Redis client, etc. - [ ]
+27. make utils functions - [ ]
