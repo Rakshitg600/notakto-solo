@@ -64,7 +64,8 @@ func EnsureLogin(ctx context.Context, pool *pgxpool.Pool, authClient *auth.Clien
 
 	qtx := queries.WithTx(tx)
 	// STEP 3: Create new player
-	username, _, _ = strings.Cut(email, "@")
+	// default username for rakshitg600@gmail.com will be rakshitg600_gmail_com
+	username = strings.NewReplacer("@", "_", ".", "_").Replace(email)
 	err = store.CreatePlayer(ctx, qtx, name, email, profilePic, username)
 	if err != nil {
 		return "", "", "", "", true, err
