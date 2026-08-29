@@ -58,3 +58,38 @@ func loadCensorUsernameConfig(ctx context.Context, q *db.Queries) ([]string, err
 	}
 	return badWords, nil
 }
+
+func loadUsernameWordLists(ctx context.Context, q *db.Queries) (usernameWordLists, error) {
+	adjectives, err := loadUsernameWordList(ctx, q, config.UsernameAdjectivesKey, config.DefaultUsernameAdjectives())
+	if err != nil {
+		return usernameWordLists{}, err
+	}
+	animals, err := loadUsernameWordList(ctx, q, config.UsernameAnimalsKey, config.DefaultUsernameAnimals())
+	if err != nil {
+		return usernameWordLists{}, err
+	}
+	spaceWords, err := loadUsernameWordList(ctx, q, config.UsernameSpaceWordKey, config.DefaultUsernameSpaceWords())
+	if err != nil {
+		return usernameWordLists{}, err
+	}
+	return usernameWordLists{
+		adjectives: adjectives,
+		animals:    animals,
+		spaceWords: spaceWords,
+	}, nil
+}
+
+func loadUsernameWordList(ctx context.Context, q *db.Queries, key string, fallback []string) ([]string, error) {
+	value, err := store.GetConfigValueByKey(ctx, q, key)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return fallback, nil
+	}
+	if err != nil {
+		return nil, fmt.Errorf("get %q config: %w", key, err)
+	}
+	words := make([]string, 0)
+	if err := json.Unmarshal(value, &words); err != nil {
+		return nil, fmt.Errorf("decode %s config: %w", key, err)
+	}
+	return words, nil
+}

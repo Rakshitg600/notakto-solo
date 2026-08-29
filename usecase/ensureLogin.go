@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"log"
-	"strings"
 
 	"firebase.google.com/go/v4/auth"
 	"github.com/jackc/pgx/v5"
@@ -48,6 +47,10 @@ func EnsureLogin(ctx context.Context, pool *pgxpool.Pool, authClient *auth.Clien
 	if err != nil {
 		return "", "", "", "", true, err
 	}
+	usernameLists, err := loadUsernameWordLists(ctx, queries)
+	if err != nil {
+		return "", "", "", "", true, err
+	}
 	tx, err := pool.BeginTx(ctx, pgx.TxOptions{
 		IsoLevel:   pgx.Serializable,
 		AccessMode: pgx.ReadWrite,
@@ -64,8 +67,10 @@ func EnsureLogin(ctx context.Context, pool *pgxpool.Pool, authClient *auth.Clien
 
 	qtx := queries.WithTx(tx)
 	// STEP 3: Create new player
-	// default username for rakshitg600@gmail.com will be rakshitg600_gmail_com
-	username = strings.NewReplacer("@", "_", ".", "_").Replace(email)
+	username, err = generateAvailableUsername(ctx, qtx, usernameLists)
+	if err != nil {
+		return "", "", "", "", true, err
+	}
 	err = store.CreatePlayer(ctx, qtx, name, email, profilePic, username)
 	if err != nil {
 		return "", "", "", "", true, err

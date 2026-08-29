@@ -17,7 +17,7 @@ const (
 // - Non-empty
 // - Length between 3 and 30 characters
 // - No whitespace
-// - Contains only uppercase/lowercase English letters, digits, and underscores ('_')
+// - Contains only uppercase/lowercase English letters, digits, underscores ('_'), and hyphens ('-')
 func ValidateUsername(username string) error {
 	if username == "" {
 		return errors.New("username cannot be empty")
@@ -39,10 +39,10 @@ func ValidateUsername(username string) error {
 		if unicode.IsSpace(r) {
 			return errors.New("username cannot contain whitespace")
 		}
-		if (r >= 'a' && r <= 'z') || (r >= 'A' && r <= 'Z') || (r >= '0' && r <= '9') || r == '_' {
+		if (r >= 'a' && r <= 'z') || (r >= 'A' && r <= 'Z') || (r >= '0' && r <= '9') || r == '_' || r == '-' {
 			continue
 		}
-		return fmt.Errorf("username contains invalid character '%c': only letters (a-z, A-Z), numbers (0-9), and underscores (_) are allowed", r)
+		return fmt.Errorf("username contains invalid character '%c': only letters (a-z, A-Z), numbers (0-9), underscores (_), and hyphens (-) are allowed", r)
 	}
 
 	return nil
