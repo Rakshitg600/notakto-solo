@@ -4,17 +4,24 @@ import (
 	"context"
 	"errors"
 	"log"
-	"strings"
+	"time"
 
 	"firebase.google.com/go/v4/auth"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/rakshitg600/notakto-solo/contextkey"
 	db "github.com/rakshitg600/notakto-solo/db/generated"
+	"github.com/rakshitg600/notakto-solo/logic"
 	"github.com/rakshitg600/notakto-solo/store"
+	"github.com/redis/go-redis/v9"
 )
 
-func EnsureLogin(ctx context.Context, pool *pgxpool.Pool, authClient *auth.Client) (profilePic string, name string, email string, username string, isNew bool, err error) {
+const (
+	usernameAllocationLockKeyPrefix = "lock:username-allocation:"
+	usernameAllocationLockTTL       = 12 * time.Second
+)
+
+func EnsureLogin(ctx context.Context, pool *pgxpool.Pool, authClient *auth.Client, rdb *redis.Client) (profilePic string, name string, email string, username string, isNew bool, err error) {
 	uid, ok := contextkey.UIDFromContext(ctx)
 	if !ok || uid == "" {
 		return "", "", "", "", false, errors.New("missing or invalid uid in context")
@@ -48,6 +55,11 @@ func EnsureLogin(ctx context.Context, pool *pgxpool.Pool, authClient *auth.Clien
 	if err != nil {
 		return "", "", "", "", true, err
 	}
+	usernameLists, err := loadUsernameWordLists(ctx, queries)
+	if err != nil {
+		return "", "", "", "", true, err
+	}
+
 	tx, err := pool.BeginTx(ctx, pgx.TxOptions{
 		IsoLevel:   pgx.Serializable,
 		AccessMode: pgx.ReadWrite,
@@ -56,15 +68,34 @@ func EnsureLogin(ctx context.Context, pool *pgxpool.Pool, authClient *auth.Clien
 		return "", "", "", "", true, err
 	}
 	defer func(tx pgx.Tx, ctx context.Context) {
-		err := tx.Rollback(ctx)
-		if err != nil {
+		if err := tx.Rollback(ctx); err != nil && !errors.Is(err, pgx.ErrTxClosed) {
 			log.Printf("EnsureLogin: Failed to rollback transaction: %v", err)
 		}
 	}(tx, ctx)
 
 	qtx := queries.WithTx(tx)
 	// STEP 3: Create new player
-	username, _, _ = strings.Cut(email, "@")
+	username, err = generateAvailableUsername(ctx, qtx, usernameLists)
+	if err != nil {
+		return "", "", "", "", true, err
+	}
+
+	lockKey := usernameAllocationLockKeyPrefix + username
+	unlock, err := logic.AcquireRedisLock(ctx, rdb, lockKey, usernameAllocationLockTTL)
+	if errors.Is(err, logic.ErrRedisLockAlreadyHeld) {
+		return "", "", "", "", true, err
+	}
+	if err != nil {
+		return "", "", "", "", true, err
+	}
+	defer func() {
+		unlockCtx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+		defer cancel()
+		if err := unlock(unlockCtx); err != nil {
+			log.Printf("EnsureLogin: Failed to release username allocation lock: %v", err)
+		}
+	}()
+
 	err = store.CreatePlayer(ctx, qtx, name, email, profilePic, username)
 	if err != nil {
 		return "", "", "", "", true, err

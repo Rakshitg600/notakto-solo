@@ -2,20 +2,18 @@ package middleware
 
 import (
 	"context"
-	"crypto/rand"
-	"encoding/hex"
+	"errors"
 	"net/http"
 	"time"
 
 	"github.com/labstack/echo/v4"
 	"github.com/rakshitg600/notakto-solo/contextkey"
-	"github.com/rakshitg600/notakto-solo/lua"
+	"github.com/rakshitg600/notakto-solo/logic"
 	"github.com/redis/go-redis/v9"
 )
 
 const (
-	lockTTL       = 12 * time.Second
-	lockRetryWait = 50 * time.Millisecond
+	lockTTL = 12 * time.Second
 )
 
 // UIDLockMiddleware returns middleware that serializes requests per UID using
@@ -32,30 +30,12 @@ func UIDLockMiddleware(rdb *redis.Client) echo.MiddlewareFunc {
 
 			lockKey := "lock:uid:" + uid // The key in key val pairs
 
-			// value in key value pair, this value is unique to each request ==> uid,requestIdentifier map
-			nonce := make([]byte, 16)
-			if _, err := rand.Read(nonce); err != nil {
-				return echo.NewHTTPError(http.StatusInternalServerError, "Failed to generate lock nonce")
+			unlock, err := logic.AcquireRedisLock(ctx, rdb, lockKey, lockTTL)
+			if errors.Is(err, logic.ErrRedisLockAlreadyHeld) {
+				return echo.NewHTTPError(http.StatusTooManyRequests, "Could not acquire lock, try again later")
 			}
-			lockVal := hex.EncodeToString(nonce)
-			ticker := time.NewTicker(lockRetryWait)
-			defer ticker.Stop()
-
-			// Retry acquiring the lock until the request context expires.
-			for {
-				ok, err := rdb.SetNX(ctx, lockKey, lockVal, lockTTL).Result()
-				if err != nil {
-					return echo.NewHTTPError(http.StatusInternalServerError, "Lock service unavailable")
-				}
-				if ok {
-					break
-				}
-
-				select {
-				case <-ctx.Done():
-					return echo.NewHTTPError(http.StatusTooManyRequests, "Could not acquire lock, try again later")
-				case <-ticker.C:
-				}
+			if err != nil {
+				return echo.NewHTTPError(http.StatusInternalServerError, "Lock service unavailable")
 			}
 
 			// Ensure unlock runs after the handler, even on panic.
@@ -63,7 +43,7 @@ func UIDLockMiddleware(rdb *redis.Client) echo.MiddlewareFunc {
 			defer func() {
 				unlockCtx, unlockCancel := context.WithTimeout(context.Background(), 2*time.Second)
 				defer unlockCancel()
-				if err := lua.Unlock.Run(unlockCtx, rdb, []string{lockKey}, lockVal).Err(); err != nil {
+				if err := unlock(unlockCtx); err != nil {
 					c.Logger().Errorf("uid-lock: failed to unlock %s: %v", lockKey, err)
 				}
 			}()

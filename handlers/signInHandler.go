@@ -1,12 +1,14 @@
 package handlers
 
 import (
+	"errors"
 	"log"
 	"net/http"
 
 	"github.com/labstack/echo/v4"
 
 	"github.com/rakshitg600/notakto-solo/contextkey"
+	"github.com/rakshitg600/notakto-solo/logic"
 	"github.com/rakshitg600/notakto-solo/usecase"
 )
 
@@ -29,9 +31,13 @@ func (h *Handler) SignInHandler(c echo.Context) error {
 		c.Request().Context(),
 		h.Pool,
 		h.AuthClient,
+		h.ValkeyClient,
 	)
 
 	if err != nil {
+		if errors.Is(err, logic.ErrRedisLockAlreadyHeld) {
+			return echo.NewHTTPError(http.StatusTooManyRequests, "Could not acquire lock, try again later")
+		}
 		c.Logger().Errorf("EnsurePlayer failed: %v", err)
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
