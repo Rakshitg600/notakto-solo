@@ -41,10 +41,11 @@ func EnsureUpdateProfileImage(
 	if imagekitClient == nil {
 		return UpdateProfileImageResult{}, errors.New("ImageKit client is required")
 	}
-	if err := imagekitClient.ValidateProfileImageFilePath(uid, filePath); err != nil {
+	verifiedAsset, err := imagekitClient.VerifyProfileImageAsset(ctx, uid, fileID, filePath)
+	if err != nil {
 		return UpdateProfileImageResult{}, fmt.Errorf("%w: %v", ErrInvalidProfileImageRequest, err)
 	}
-	profilePic, err := imagekitClient.ProfileImageURL(filePath)
+	profilePic, err := imagekitClient.ProfileImageURL(verifiedAsset.FilePath)
 	if err != nil {
 		return UpdateProfileImageResult{}, err
 	}
@@ -71,7 +72,7 @@ func EnsureUpdateProfileImage(
 		return UpdateProfileImageResult{}, fmt.Errorf("look up player profile: %w", err)
 	}
 
-	if _, err := store.UpsertImageForUID(ctx, qtx, fileID, filePath); err != nil {
+	if _, err := store.UpsertImageForUID(ctx, qtx, verifiedAsset.FileID, verifiedAsset.FilePath); err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return UpdateProfileImageResult{}, ErrProfileImageFileIDConflict
 		}
@@ -91,7 +92,7 @@ func EnsureUpdateProfileImage(
 
 	return UpdateProfileImageResult{
 		ProfilePic: profilePic,
-		FileID:     fileID,
-		FilePath:   filePath,
+		FileID:     verifiedAsset.FileID,
+		FilePath:   verifiedAsset.FilePath,
 	}, nil
 }

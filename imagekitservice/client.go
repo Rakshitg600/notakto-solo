@@ -1,6 +1,7 @@
 package imagekitservice
 
 import (
+	"context"
 	"encoding/base64"
 	"errors"
 	"fmt"
@@ -36,6 +37,7 @@ var (
 	ErrInvalidFilename         = errors.New("invalid image filename")
 	ErrInvalidProfileImagePath = errors.New("invalid profile image path")
 	ErrUnsupportedExtension    = errors.New("unsupported image extension")
+	ErrAssetVerificationFailed = errors.New("profile image asset verification failed")
 )
 
 // Config contains the server-only ImageKit credentials and public CDN endpoint.
@@ -65,6 +67,11 @@ type UploadAuth struct {
 	ExpiresAt     int64         `json:"expiresAt"`
 	UploadURL     string        `json:"uploadUrl"`
 	UploadPayload UploadPayload `json:"uploadPayload"`
+}
+
+type VerifiedProfileImageAsset struct {
+	FileID   string
+	FilePath string
 }
 
 type Client struct {
@@ -157,33 +164,50 @@ func (c *Client) GenerateUploadAuth(uid, originalFilename string) (UploadAuth, e
 	}, nil
 }
 
-func (c *Client) ValidateProfileImageFilePath(uid, filePath string) error {
+func (c *Client) VerifyProfileImageAsset(ctx context.Context, uid, fileID, filePath string) (VerifiedProfileImageAsset, error) {
+	if c == nil || c.sdk == nil {
+		return VerifiedProfileImageAsset{}, errors.New("ImageKit client is required")
+	}
+	if strings.TrimSpace(fileID) == "" || strings.TrimSpace(fileID) != fileID {
+		return VerifiedProfileImageAsset{}, ErrAssetVerificationFailed
+	}
 	folder, err := profileImageFolder(uid)
 	if err != nil {
-		return err
+		return VerifiedProfileImageAsset{}, err
 	}
 	if filePath == "" || strings.TrimSpace(filePath) != filePath || !utf8.ValidString(filePath) {
-		return ErrInvalidProfileImagePath
+		return VerifiedProfileImageAsset{}, ErrInvalidProfileImagePath
 	}
 	if path.Clean(filePath) != filePath || path.Dir(filePath) != folder {
-		return ErrInvalidProfileImagePath
+		return VerifiedProfileImageAsset{}, ErrInvalidProfileImagePath
 	}
 
 	fileName := path.Base(filePath)
 	if !strings.HasPrefix(fileName, "avatar-") {
-		return ErrInvalidProfileImagePath
+		return VerifiedProfileImageAsset{}, ErrInvalidProfileImagePath
 	}
 	extension := strings.ToLower(path.Ext(fileName))
 	if extension != ".jpg" && extension != ".png" && extension != ".webp" {
-		return ErrInvalidProfileImagePath
+		return VerifiedProfileImageAsset{}, ErrInvalidProfileImagePath
 	}
 	stem := strings.TrimSuffix(fileName, extension)
 	avatarID := strings.TrimPrefix(stem, "avatar-")
 	parsedAvatarID, err := uuid.Parse(avatarID)
 	if err != nil || parsedAvatarID.String() != avatarID {
-		return ErrInvalidProfileImagePath
+		return VerifiedProfileImageAsset{}, ErrInvalidProfileImagePath
 	}
-	return nil
+
+	asset, err := c.sdk.Files.Get(ctx, fileID)
+	if err != nil {
+		return VerifiedProfileImageAsset{}, fmt.Errorf("%w: %v", ErrAssetVerificationFailed, err)
+	}
+	if asset == nil || asset.FileID != fileID || asset.FilePath != filePath {
+		return VerifiedProfileImageAsset{}, ErrAssetVerificationFailed
+	}
+	return VerifiedProfileImageAsset{
+		FileID:   asset.FileID,
+		FilePath: asset.FilePath,
+	}, nil
 }
 
 func (c *Client) ProfileImageURL(filePath string) (string, error) {
