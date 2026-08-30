@@ -13,3 +13,6 @@ SELECT EXISTS(SELECT 1 FROM Player WHERE username = $1 AND uid != $2) AS exists;
 
 -- name: UpdatePlayerUsername :one
 UPDATE Player SET username = $2 WHERE uid = $1 RETURNING *;
+
+-- name: UpdatePlayerProfilePic :one
+UPDATE Player SET profile_pic = $2 WHERE uid = $1 RETURNING *;

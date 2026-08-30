@@ -17,6 +17,15 @@ type Config struct {
 	UpdatedAt time.Time `json:"updated_at"`
 }
 
+type Image struct {
+	FileID    string    `json:"file_id"`
+	Uid       string    `json:"uid"`
+	FilePath  string    `json:"file_path"`
+	Source    string    `json:"source"`
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
+}
+
 type Payment struct {
 	ID          string    `json:"id"`
 	Uid         string    `json:"uid"`

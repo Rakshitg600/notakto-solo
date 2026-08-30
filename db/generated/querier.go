@@ -28,6 +28,7 @@ type Querier interface {
 	QuitGameSession(ctx context.Context, sessionID string) error
 	UpdatePaymentStatusIfNotConfirmed(ctx context.Context, arg UpdatePaymentStatusIfNotConfirmedParams) (int64, error)
 	UpdatePlayerName(ctx context.Context, arg UpdatePlayerNameParams) (Player, error)
+	UpdatePlayerProfilePic(ctx context.Context, arg UpdatePlayerProfilePicParams) (Player, error)
 	UpdatePlayerUsername(ctx context.Context, arg UpdatePlayerUsernameParams) (Player, error)
 	UpdateSessionAfterGameover(ctx context.Context, arg UpdateSessionAfterGameoverParams) error
 	UpdateSessionAfterQuitGame(ctx context.Context, sessionID string) error
@@ -35,6 +36,7 @@ type Querier interface {
 	UpdateWalletCoinsAndXpReward(ctx context.Context, arg UpdateWalletCoinsAndXpRewardParams) error
 	UpdateWalletReduceCoins(ctx context.Context, arg UpdateWalletReduceCoinsParams) error
 	UpdateWalletXpReward(ctx context.Context, arg UpdateWalletXpRewardParams) error
+	UpsertImageForUID(ctx context.Context, arg UpsertImageForUIDParams) (Image, error)
 }
 
 var _ Querier = (*Queries)(nil)
