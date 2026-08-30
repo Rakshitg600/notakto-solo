@@ -1,6 +1,7 @@
 package imagekitservice
 
 import (
+	"context"
 	"encoding/base64"
 	"errors"
 	"fmt"
@@ -20,15 +21,23 @@ const (
 	UploadAuthTTL        = 5 * time.Minute
 	MaxFileSizeBytes     = int64(5 * 1024 * 1024)
 	MaxImageDimension    = 4096
-	UploadChecks         = "'file.mime' IN ['image/jpeg', 'image/png', 'image/webp'] AND 'file.size' <= 5242880 AND 'mediaMetadata.width' <= 4096 AND 'mediaMetadata.height' <= 4096"
 	profileImageRoot     = "/profile-images"
 	maxOriginalNameBytes = 255
 )
 
+var UploadChecks = fmt.Sprintf(
+	"'file.mime' IN ['image/jpeg', 'image/png', 'image/webp'] AND 'file.size' <= %d AND 'mediaMetadata.width' <= %d AND 'mediaMetadata.height' <= %d",
+	MaxFileSizeBytes,
+	MaxImageDimension,
+	MaxImageDimension,
+)
+
 var (
-	ErrInvalidUID           = errors.New("invalid Firebase UID")
-	ErrInvalidFilename      = errors.New("invalid image filename")
-	ErrUnsupportedExtension = errors.New("unsupported image extension")
+	ErrInvalidUID              = errors.New("invalid Firebase UID")
+	ErrInvalidFilename         = errors.New("invalid image filename")
+	ErrInvalidProfileImagePath = errors.New("invalid profile image path")
+	ErrUnsupportedExtension    = errors.New("unsupported image extension")
+	ErrAssetVerificationFailed = errors.New("profile image asset verification failed")
 )
 
 // Config contains the server-only ImageKit credentials and public CDN endpoint.
@@ -60,6 +69,11 @@ type UploadAuth struct {
 	UploadPayload UploadPayload `json:"uploadPayload"`
 }
 
+type VerifiedProfileImageAsset struct {
+	FileID   string
+	FilePath string
+}
+
 type Client struct {
 	sdk         *imagekitsdk.Client
 	publicKey   string
@@ -86,10 +100,10 @@ func NewClient(cfg Config) (*Client, error) {
 }
 
 func (c *Client) GenerateUploadAuth(uid, originalFilename string) (UploadAuth, error) {
-	if uid == "" || strings.TrimSpace(uid) == "" || !utf8.ValidString(uid) {
-		return UploadAuth{}, ErrInvalidUID
+	folder, err := profileImageFolder(uid)
+	if err != nil {
+		return UploadAuth{}, err
 	}
-	folder := profileImageRoot + "/" + base64.RawURLEncoding.EncodeToString([]byte(uid))
 	if originalFilename == "" || len(originalFilename) > maxOriginalNameBytes ||
 		strings.TrimSpace(originalFilename) != originalFilename || !utf8.ValidString(originalFilename) ||
 		strings.ContainsAny(originalFilename, `/\`) {
@@ -148,4 +162,67 @@ func (c *Client) GenerateUploadAuth(uid, originalFilename string) (UploadAuth, e
 			Checks:            UploadChecks,
 		},
 	}, nil
+}
+
+func (c *Client) VerifyProfileImageAsset(ctx context.Context, uid, fileID, filePath string) (VerifiedProfileImageAsset, error) {
+	if c == nil || c.sdk == nil {
+		return VerifiedProfileImageAsset{}, errors.New("ImageKit client is required")
+	}
+	if strings.TrimSpace(fileID) == "" || strings.TrimSpace(fileID) != fileID {
+		return VerifiedProfileImageAsset{}, ErrAssetVerificationFailed
+	}
+	folder, err := profileImageFolder(uid)
+	if err != nil {
+		return VerifiedProfileImageAsset{}, err
+	}
+	if filePath == "" || strings.TrimSpace(filePath) != filePath || !utf8.ValidString(filePath) {
+		return VerifiedProfileImageAsset{}, ErrInvalidProfileImagePath
+	}
+	if path.Clean(filePath) != filePath || path.Dir(filePath) != folder {
+		return VerifiedProfileImageAsset{}, ErrInvalidProfileImagePath
+	}
+
+	fileName := path.Base(filePath)
+	if !strings.HasPrefix(fileName, "avatar-") {
+		return VerifiedProfileImageAsset{}, ErrInvalidProfileImagePath
+	}
+	extension := strings.ToLower(path.Ext(fileName))
+	if extension != ".jpg" && extension != ".png" && extension != ".webp" {
+		return VerifiedProfileImageAsset{}, ErrInvalidProfileImagePath
+	}
+	stem := strings.TrimSuffix(fileName, extension)
+	avatarID := strings.TrimPrefix(stem, "avatar-")
+	parsedAvatarID, err := uuid.Parse(avatarID)
+	if err != nil || parsedAvatarID.String() != avatarID {
+		return VerifiedProfileImageAsset{}, ErrInvalidProfileImagePath
+	}
+
+	asset, err := c.sdk.Files.Get(ctx, fileID)
+	if err != nil {
+		return VerifiedProfileImageAsset{}, fmt.Errorf("%w: %v", ErrAssetVerificationFailed, err)
+	}
+	if asset == nil || asset.FileID != fileID || asset.FilePath != filePath {
+		return VerifiedProfileImageAsset{}, ErrAssetVerificationFailed
+	}
+	return VerifiedProfileImageAsset{
+		FileID:   asset.FileID,
+		FilePath: asset.FilePath,
+	}, nil
+}
+
+func (c *Client) ProfileImageURL(filePath string) (string, error) {
+	if c == nil || c.urlEndpoint == "" {
+		return "", errors.New("ImageKit URL endpoint is required")
+	}
+	if filePath == "" || !strings.HasPrefix(filePath, "/") {
+		return "", ErrInvalidProfileImagePath
+	}
+	return c.urlEndpoint + filePath, nil
+}
+
+func profileImageFolder(uid string) (string, error) {
+	if uid == "" || strings.TrimSpace(uid) == "" || !utf8.ValidString(uid) {
+		return "", ErrInvalidUID
+	}
+	return profileImageRoot + "/" + base64.RawURLEncoding.EncodeToString([]byte(uid)), nil
 }

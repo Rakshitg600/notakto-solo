@@ -160,6 +160,30 @@ overwrite/publication flags, and checks into the token; clients cannot choose an
 }
 ```
 
+After ImageKit returns a successful upload response, the frontend finalizes the profile
+image with:
+
+`PUT /v1/profile-image/update`
+
+```json
+{
+  "fileId": "<imagekit-file-id>",
+  "filePath": "/profile-images/<encoded-uid>/avatar-<uuid>.webp"
+}
+```
+
+The server validates that the path belongs to the authenticated user's profile-image folder,
+stores the ImageKit `fileId` and `filePath`, builds the public ImageKit URL, and updates
+`Player.profile_pic`.
+
+```json
+{
+  "profile_pic": "https://ik.imagekit.io/<your_imagekit_id>/profile-images/<encoded-uid>/avatar-<uuid>.webp",
+  "fileId": "<imagekit-file-id>",
+  "filePath": "/profile-images/<encoded-uid>/avatar-<uuid>.webp"
+}
+```
+
 ### Leaderboard
 
 `GET /v1/leaderboard` returns up to 10 players with non-null XP, ranked by competition ranking (`1, 1, 3`). Ties are ordered alphabetically by username and only `rank`, `username`, and `xp` are exposed.

@@ -90,6 +90,28 @@ func (q *Queries) UpdatePlayerName(ctx context.Context, arg UpdatePlayerNamePara
 	return i, err
 }
 
+const updatePlayerProfilePic = `-- name: UpdatePlayerProfilePic :one
+UPDATE Player SET profile_pic = $2 WHERE uid = $1 RETURNING uid, name, email, profile_pic, username
+`
+
+type UpdatePlayerProfilePicParams struct {
+	Uid        string      `json:"uid"`
+	ProfilePic pgtype.Text `json:"profile_pic"`
+}
+
+func (q *Queries) UpdatePlayerProfilePic(ctx context.Context, arg UpdatePlayerProfilePicParams) (Player, error) {
+	row := q.db.QueryRow(ctx, updatePlayerProfilePic, arg.Uid, arg.ProfilePic)
+	var i Player
+	err := row.Scan(
+		&i.Uid,
+		&i.Name,
+		&i.Email,
+		&i.ProfilePic,
+		&i.Username,
+	)
+	return i, err
+}
+
 const updatePlayerUsername = `-- name: UpdatePlayerUsername :one
 UPDATE Player SET username = $2 WHERE uid = $1 RETURNING uid, name, email, profile_pic, username
 `
