@@ -7,18 +7,28 @@ import (
 	"github.com/redis/go-redis/v9"
 
 	"github.com/rakshitg600/notakto-solo/handlers"
+	"github.com/rakshitg600/notakto-solo/imagekitservice"
 	"github.com/rakshitg600/notakto-solo/middleware"
 	"github.com/rakshitg600/notakto-solo/nowpayments"
 )
 
-func SetupRoutes(e *echo.Echo, pool *pgxpool.Pool, authClient *auth.Client, valkeyClient *redis.Client, npClient *nowpayments.Client, ipnSecret string, keepaliveToken string) {
+func SetupRoutes(
+	e *echo.Echo,
+	pool *pgxpool.Pool,
+	authClient *auth.Client,
+	valkeyClient *redis.Client,
+	npClient *nowpayments.Client,
+	imagekitClient *imagekitservice.Client,
+	ipnSecret string,
+	keepaliveToken string,
+) {
 
 	ipRateLimit := middleware.IPRateLimitMiddleware(valkeyClient, 120)
 	firebaseAuth := middleware.FirebaseAuthMiddleware(authClient)
 	uidRateLimit := middleware.UIDRateLimitMiddleware(valkeyClient, 60)
 	uidLock := middleware.UIDLockMiddleware(valkeyClient)
 
-	handler := handlers.NewHandler(pool, authClient, valkeyClient, npClient, ipnSecret)
+	handler := handlers.NewHandler(pool, authClient, valkeyClient, npClient, imagekitClient, ipnSecret)
 
 	e.HEAD("/v1/health-head", handler.HealthHeadHandler)
 	e.GET("/v1/health-get", handler.HealthGetHandler)
@@ -35,6 +45,7 @@ func SetupRoutes(e *echo.Echo, pool *pgxpool.Pool, authClient *auth.Client, valk
 	e.GET("/v1/leaderboard", handler.LeaderboardHandler, ipRateLimit, firebaseAuth, uidRateLimit)
 	e.POST("/v1/update-name", handler.UpdateNameHandler, ipRateLimit, firebaseAuth, uidRateLimit, uidLock)
 	e.POST("/v1/update-username", handler.UpdateUsernameHandler, ipRateLimit, firebaseAuth, uidRateLimit, uidLock)
+	e.POST("/v1/profile-image/upload-auth", handler.ProfileImageUploadAuthHandler, ipRateLimit, firebaseAuth, uidRateLimit)
 
 	// ── Payment routes ──
 	e.GET("/v1/all-packages", handler.GetAllPackagesHandler, ipRateLimit, firebaseAuth, uidRateLimit, uidLock)
